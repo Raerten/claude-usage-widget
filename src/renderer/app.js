@@ -1,5 +1,6 @@
 // Application state
 let credentials = null;
+let organizations = [];
 let updateInterval = null;
 let countdownInterval = null;
 let latestUsageData = null;
@@ -14,6 +15,12 @@ const elements = {
     autoLoginContainer: document.getElementById('autoLoginContainer'),
     mainContent: document.getElementById('mainContent'),
     loginBtn: document.getElementById('loginBtn'),
+
+    // Org switcher
+    orgSwitcher: document.getElementById('orgSwitcher'),
+    orgCurrentBtn: document.getElementById('orgCurrentBtn'),
+    orgName: document.getElementById('orgName'),
+    orgDropdown: document.getElementById('orgDropdown'),
 
     // Session (five_hour)
     sessionPercentage: document.getElementById('sessionPercentage'),
@@ -44,8 +51,10 @@ async function init() {
     setupEventListeners();
     loadOpacity();
     credentials = await window.electronAPI.getCredentials();
+    organizations = await window.electronAPI.getOrganizations();
 
     if (credentials.sessionKey && credentials.organizationId) {
+        renderOrgSwitcher();
         showMainContent();
         await fetchUsageData();
         startAutoUpdate();
@@ -69,16 +78,36 @@ function setupEventListeners() {
         window.electronAPI.saveOpacity(value);
     });
 
+    // Org switcher toggle
+    elements.orgCurrentBtn.addEventListener('click', () => {
+        if (organizations.length > 1) {
+            elements.orgSwitcher.classList.toggle('open');
+        }
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+        if (!elements.orgSwitcher.contains(e.target)) {
+            elements.orgSwitcher.classList.remove('open');
+        }
+    });
+
     // Listen for logout from tray
     window.electronAPI.onLogout(() => {
         credentials = { sessionKey: null, organizationId: null };
+        organizations = [];
         showLoginRequired();
     });
 
     // Listen for login success
     window.electronAPI.onLoginSuccess(async (data) => {
-        credentials = data;
-        await window.electronAPI.saveCredentials(data);
+        credentials = { sessionKey: data.sessionKey, organizationId: data.organizationId };
+        organizations = data.organizations || [];
+        await window.electronAPI.saveCredentials({
+            sessionKey: data.sessionKey,
+            organizationId: data.organizationId,
+        });
+        renderOrgSwitcher();
         showMainContent();
         await fetchUsageData();
         startAutoUpdate();
@@ -103,6 +132,66 @@ function setupEventListeners() {
     window.electronAPI.onSilentLoginFailed(() => {
         showLoginRequired();
     });
+
+    // Listen for org switch from tray
+    window.electronAPI.onOrgSwitched(async (orgId) => {
+        credentials.organizationId = orgId;
+        renderOrgSwitcher();
+        latestUsageData = null;
+        await fetchUsageData();
+        startAutoUpdate();
+    });
+}
+
+// Org switcher
+function renderOrgSwitcher() {
+    if (!organizations || organizations.length === 0) {
+        elements.orgSwitcher.style.display = 'none';
+        return;
+    }
+
+    elements.orgSwitcher.style.display = 'block';
+
+    // Set current org name
+    const current = organizations.find(o => o.id === credentials.organizationId);
+    elements.orgName.textContent = current ? current.name : '\u2014';
+
+    if (organizations.length <= 1) {
+        // Single org — show name but hide chevron, no dropdown
+        elements.orgCurrentBtn.style.cursor = 'default';
+        elements.orgCurrentBtn.querySelector('.org-chevron').style.display = 'none';
+        return;
+    }
+
+    elements.orgCurrentBtn.style.cursor = 'pointer';
+    elements.orgCurrentBtn.querySelector('.org-chevron').style.display = '';
+
+    // Build dropdown options
+    elements.orgDropdown.innerHTML = '';
+    for (const org of organizations) {
+        const btn = document.createElement('button');
+        btn.className = 'org-option' + (org.id === credentials.organizationId ? ' active' : '');
+        btn.textContent = org.name;
+        btn.addEventListener('click', () => switchOrg(org.id));
+        elements.orgDropdown.appendChild(btn);
+    }
+}
+
+async function switchOrg(orgId) {
+    if (orgId === credentials.organizationId) {
+        elements.orgSwitcher.classList.remove('open');
+        return;
+    }
+
+    credentials.organizationId = orgId;
+    await window.electronAPI.setSelectedOrg(orgId);
+    elements.orgSwitcher.classList.remove('open');
+    renderOrgSwitcher();
+
+    // Re-fetch usage for the new org
+    latestUsageData = null;
+    await fetchUsageData();
+    startAutoUpdate();
 }
 
 // Opacity management
@@ -319,6 +408,7 @@ function showLoginRequired() {
     elements.noUsageContainer.style.display = 'none';
     elements.autoLoginContainer.style.display = 'none';
     elements.mainContent.style.display = 'none';
+    elements.orgSwitcher.style.display = 'none';
     stopAutoUpdate();
 }
 

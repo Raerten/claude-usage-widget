@@ -29,9 +29,17 @@ assets/              # Icons, logos, screenshots
 ### Authentication
 1. Opens BrowserWindow to `https://claude.ai` for user login
 2. Monitors cookies for `sessionKey`
-3. Fetches org list from `/api/organizations`, extracts `orgId`
-4. Stores `sessionKey` + `organizationId` via electron-store
-5. Silent re-login (hidden window) on 401/403 errors using existing browser cookies
+3. Fetches all orgs from `/api/organizations`, stores full list as `{id, name}` array
+4. Stores `sessionKey` + `organizations[]` + `selectedOrganizationId` via electron-store
+5. On re-login, preserves existing org selection if still valid
+6. Silent re-login (hidden window) on 401/403 errors using existing browser cookies
+
+### Multi-Organization Support
+- All orgs are stored on login; user can switch between them
+- Org switcher dropdown in top bar (hidden if only 1 org)
+- Tray menu shows radio-button org list when multiple orgs exist
+- Switching orgs updates `selectedOrganizationId` in store, re-fetches usage data
+- Background sync (5min auto-refresh) only runs for the selected org
 
 ### Usage Data
 - Endpoint: `https://claude.ai/api/organizations/{orgId}/usage`
@@ -55,10 +63,10 @@ npm run build:win    # Build Windows installer to dist/
 
 ## Key Implementation Details
 
-- Org ID is pulled from `response.data[1]` (second org in the list)
+- All orgs stored as `organizations[]` array; selected org tracked via `selectedOrganizationId`
 - electron-store encryption key is currently commented out in main.js
 - Color coding: purple (0-74%), orange (75-89%), red (90-100%)
-- IPC channels: `fetch-usage-data`, `login-success`, `open-login-window`, `start-silent-login`, `clear-credentials`
+- IPC channels: `fetch-usage-data`, `login-success`, `open-login`, `get-organizations`, `set-selected-org`, `org-switched`
 - Login window is 800x700, loads claude.ai directly
 - Silent login has 15-second timeout before falling back to visible login
 

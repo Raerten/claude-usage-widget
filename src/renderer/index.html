@@ -14,7 +14,18 @@
             <!-- Drag Handle -->
             <div class="drag-handle" id="dragHandle">
                 <div class="top-bar">
-                    <div class="status-dot" id="statusDot"></div>
+                    <div class="top-left">
+                        <div class="status-dot" id="statusDot"></div>
+                        <div class="org-switcher" id="orgSwitcher" style="display: none;">
+                            <button class="org-current" id="orgCurrentBtn" title="Switch organization">
+                                <span class="org-name" id="orgName">—</span>
+                                <svg class="org-chevron" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </button>
+                            <div class="org-dropdown" id="orgDropdown"></div>
+                        </div>
+                    </div>
                     <div class="top-controls">
                         <div class="opacity-control">
                             <input type="range" id="opacitySlider" min="30" max="100" value="90" class="opacity-slider">

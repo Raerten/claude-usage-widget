@@ -43,6 +43,13 @@ body {
     min-height: 28px;
 }
 
+.top-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
 .status-dot {
     width: 6px;
     height: 6px;
@@ -56,6 +63,91 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+/* ── Org switcher ── */
+.org-switcher {
+    -webkit-app-region: no-drag;
+    position: relative;
+    min-width: 0;
+}
+
+.org-current {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    color: #858585;
+    font-size: 10.5px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: all 0.15s;
+    max-width: 160px;
+}
+
+.org-current:hover {
+    color: #cccccc;
+    background: #2d2d2d;
+}
+
+.org-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.org-chevron {
+    flex-shrink: 0;
+    transition: transform 0.15s;
+}
+
+.org-switcher.open .org-chevron {
+    transform: rotate(180deg);
+}
+
+.org-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 160px;
+    max-width: 220px;
+    background: #2d2d2d;
+    border: 1px solid #3c3c3c;
+    border-radius: 4px;
+    padding: 4px 0;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.org-switcher.open .org-dropdown {
+    display: block;
+}
+
+.org-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: #cccccc;
+    font-size: 11px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.org-option:hover {
+    background: #383838;
+}
+
+.org-option.active {
+    color: #569cd6;
 }
 
 /* ── Opacity slider ── */

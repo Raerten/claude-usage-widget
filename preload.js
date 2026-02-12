@@ -36,10 +36,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onLogout: (callback) => {
     ipcRenderer.on('logout', () => callback());
   },
+  onOrgSwitched: (callback) => {
+    ipcRenderer.on('org-switched', (event, orgId) => callback(orgId));
+  },
 
   // Opacity
   getOpacity: () => ipcRenderer.invoke('get-opacity'),
   saveOpacity: (value) => ipcRenderer.invoke('save-opacity', value),
+
+  // Organizations
+  getOrganizations: () => ipcRenderer.invoke('get-organizations'),
+  setSelectedOrg: (orgId) => ipcRenderer.invoke('set-selected-org', orgId),
 
   // API
   fetchUsageData: () => ipcRenderer.invoke('fetch-usage-data'),

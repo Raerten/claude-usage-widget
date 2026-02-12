@@ -5,7 +5,6 @@ const {
   CLAUDE_BASE_URL,
   ORGANIZATIONS_API,
   USER_AGENT,
-  ORG_INDEX,
   LOGIN_WINDOW_WIDTH,
   LOGIN_WINDOW_HEIGHT,
   VISIBLE_LOGIN_POLL_MS,
@@ -14,6 +13,7 @@ const {
 } = require('./constants');
 const store = require('./store');
 const { getMainWindow } = require('./window');
+const { refreshTrayMenu } = require('./tray');
 
 let loginWindow = null;
 let silentLoginWindow = null;
@@ -33,9 +33,9 @@ async function checkLoginStatus(state, opts) {
     if (cookies.length === 0) return;
 
     const sessionKey = cookies[0].value;
-    console.log(`${opts.logPrefix}Session key found, attempting to get org ID...`);
+    console.log(`${opts.logPrefix}Session key found, attempting to get orgs...`);
 
-    let orgId = null;
+    let organizations = null;
     try {
       const response = await axios.get(ORGANIZATIONS_API, {
         headers: {
@@ -44,32 +44,37 @@ async function checkLoginStatus(state, opts) {
         },
       });
 
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`${opts.logPrefix}Organizations found:`, response.data.length,
-          response.data.map((o, i) => `[${i}] ${o.name || 'unnamed'}: ${o.uuid || o.id}`).join(', '));
-
-        if (response.data.length > ORG_INDEX) {
-          orgId = response.data[ORG_INDEX].uuid || response.data[ORG_INDEX].id;
-          console.log(`${opts.logPrefix}Using org [${ORG_INDEX}]:`, orgId);
-        } else {
-          console.log(`${opts.logPrefix}ORG_INDEX ${ORG_INDEX} out of bounds, only ${response.data.length} orgs`);
-        }
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        organizations = response.data.map(org => ({
+          id: org.uuid || org.id,
+          name: org.name || 'Unnamed',
+        }));
+        console.log(`${opts.logPrefix}Organizations found:`, organizations.length,
+          organizations.map((o, i) => `[${i}] ${o.name}: ${o.id}`).join(', '));
       }
     } catch (err) {
       console.log(`${opts.logPrefix}API not ready yet:`, err.message);
     }
 
-    if (sessionKey && orgId) {
+    if (sessionKey && organizations && organizations.length > 0) {
       state.hasLoggedIn = true;
 
-      console.log(`${opts.logPrefix}Login successful!`);
-      store.saveCredentials(sessionKey, orgId);
+      // Keep existing selection if it's still valid, otherwise pick first
+      const currentSelectedId = store.getOrganizationId();
+      const selectedOrgId = organizations.some(o => o.id === currentSelectedId)
+        ? currentSelectedId
+        : organizations[0].id;
+
+      console.log(`${opts.logPrefix}Login successful! Selected org: ${selectedOrgId}`);
+      store.saveCredentials(sessionKey, organizations, selectedOrgId);
+      refreshTrayMenu();
 
       const mainWindow = getMainWindow();
       if (mainWindow) {
         mainWindow.webContents.send('login-success', {
           sessionKey,
-          organizationId: orgId,
+          organizationId: selectedOrgId,
+          organizations,
         });
       }
 

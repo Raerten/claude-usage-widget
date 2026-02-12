@@ -13,7 +13,4 @@ module.exports = {
   VISIBLE_LOGIN_POLL_MS: 2000,
   SILENT_LOGIN_POLL_MS: 1000,
   SILENT_LOGIN_TIMEOUT_MS: 15000,
-
-  // Which organization to pick from the API response array
-  ORG_INDEX: 0,
 };

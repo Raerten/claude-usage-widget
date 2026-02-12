@@ -1,6 +1,6 @@
 const { app } = require('electron');
 const { createMainWindow, getMainWindow } = require('./src/main/window');
-const { createTray } = require('./src/main/tray');
+const { createTray, refreshTrayMenu } = require('./src/main/tray');
 const { createLoginWindow } = require('./src/main/auth');
 const { registerIpcHandlers } = require('./src/main/ipc');
 const store = require('./src/main/store');
@@ -20,6 +20,16 @@ if (!gotTheLock) {
 }
 
 registerIpcHandlers();
+
+// Refresh tray menu when orgs or selected org change
+function handleOrgSwitch(orgId) {
+  store.setSelectedOrganizationId(orgId);
+  refreshTrayMenu();
+  const mainWindow = getMainWindow();
+  if (mainWindow) {
+    mainWindow.webContents.send('org-switched', orgId);
+  }
+}
 
 app.whenReady().then(() => {
   createMainWindow();
@@ -43,6 +53,7 @@ app.whenReady().then(() => {
     },
     onLogout: () => {
       store.deleteCredentials();
+      refreshTrayMenu();
       const mainWindow = getMainWindow();
       if (mainWindow) mainWindow.webContents.send('logout');
     },
@@ -52,7 +63,9 @@ app.whenReady().then(() => {
         mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
       }
     },
+    onSwitchOrg: (orgId) => handleOrgSwitch(orgId),
   });
+
 });
 
 app.on('window-all-closed', () => {

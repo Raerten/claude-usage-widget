@@ -3,12 +3,13 @@ const store = require('./store');
 const { fetchUsageData } = require('./api');
 const { getMainWindow } = require('./window');
 const { createLoginWindow, attemptSilentLogin } = require('./auth');
+const { refreshTrayMenu } = require('./tray');
 
 function registerIpcHandlers() {
   ipcMain.handle('get-credentials', () => store.getCredentials());
 
   ipcMain.handle('save-credentials', (event, { sessionKey, organizationId }) => {
-    store.saveCredentials(sessionKey, organizationId);
+    store.saveCredentials(sessionKey, null, organizationId);
     return true;
   });
 
@@ -57,6 +58,14 @@ function registerIpcHandlers() {
     return true;
   });
 
+  // Organizations
+  ipcMain.handle('get-organizations', () => store.getOrganizations());
+  ipcMain.handle('set-selected-org', (event, orgId) => {
+    store.setSelectedOrganizationId(orgId);
+    refreshTrayMenu();
+    return true;
+  });
+
   ipcMain.handle('fetch-usage-data', async () => {
     console.log('[Main] fetch-usage-data handler called');
     try {
@@ -64,7 +73,6 @@ function registerIpcHandlers() {
     } catch (error) {
       if (error.message === 'SessionExpired') {
         console.log('[Main] Session expired, attempting silent re-login...');
-        // store.deleteCredentials();
         attemptSilentLogin();
         throw new Error('SessionExpired');
       }

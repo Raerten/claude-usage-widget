@@ -6,23 +6,34 @@ const store = new Store({
 
 module.exports = {
   getSessionKey: () => store.get('sessionKey'),
-  getOrganizationId: () => store.get('organizationId'),
+
+  // Selected org (the one we fetch usage for)
+  getOrganizationId: () => store.get('selectedOrganizationId'),
+  setSelectedOrganizationId: (orgId) => store.set('selectedOrganizationId', orgId),
+
+  // All orgs from the account
+  getOrganizations: () => store.get('organizations', []),
+  setOrganizations: (orgs) => store.set('organizations', orgs),
 
   getCredentials: () => ({
     sessionKey: store.get('sessionKey'),
-    organizationId: store.get('organizationId'),
+    organizationId: store.get('selectedOrganizationId'),
   }),
 
-  saveCredentials: (sessionKey, organizationId) => {
+  saveCredentials: (sessionKey, organizations, selectedOrgId) => {
     store.set('sessionKey', sessionKey);
-    if (organizationId) {
-      store.set('organizationId', organizationId);
+    if (organizations) {
+      store.set('organizations', organizations);
+    }
+    if (selectedOrgId) {
+      store.set('selectedOrganizationId', selectedOrgId);
     }
   },
 
   deleteCredentials: () => {
     store.delete('sessionKey');
-    store.delete('organizationId');
+    store.delete('selectedOrganizationId');
+    store.delete('organizations');
   },
 
   getWindowPosition: () => store.get('windowPosition'),
