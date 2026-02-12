@@ -31,7 +31,7 @@ body {
 
 /* ── Drag handle / top bar ── */
 .drag-handle {
-    -webkit-app-region: drag;
+    cursor: default;
 }
 
 .top-bar {
@@ -58,7 +58,6 @@ body {
 }
 
 .top-controls {
-    -webkit-app-region: no-drag;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -66,7 +65,6 @@ body {
 
 /* ── Org switcher ── */
 .org-switcher {
-    -webkit-app-region: no-drag;
     position: relative;
     min-width: 0;
 }
@@ -302,6 +300,62 @@ body {
 .no-usage-content svg {
     color: #569cd6;
     flex-shrink: 0;
+}
+
+/* ── Collapsed bar ── */
+.collapsed-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 18px 6px;
+    cursor: default;
+}
+
+.collapsed-progress-track {
+    flex: 1;
+    height: 5px;
+    background: #333333;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 60px;
+}
+
+.collapsed-percent {
+    color: #969696;
+    font-size: 10.5px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.collapsed-reset {
+    color: #6a6a6a;
+    font-size: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.collapsed-refresh-btn {
+    background: transparent;
+    border: none;
+    color: #6a6a6a;
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.collapsed-refresh-btn:hover {
+    color: #cccccc;
+    background: #2d2d2d;
+}
+
+.collapsed-refresh-btn.spinning svg {
+    animation: spin-refresh 0.8s linear infinite;
 }
 
 /* ── Main content ── */

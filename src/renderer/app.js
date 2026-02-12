@@ -4,7 +4,52 @@ let organizations = [];
 let updateInterval = null;
 let countdownInterval = null;
 let latestUsageData = null;
+let isCollapsed = false;
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+// Manual window drag (replaces -webkit-app-region: drag so clicks work)
+let isDragging = false;
+let dragStartScreen = null;
+let dragStartWinPos = null;
+const DRAG_THRESHOLD = 4;
+
+function setupManualDrag(el, onClick) {
+    el.addEventListener('mousedown', async (e) => {
+        // Ignore if clicking interactive children
+        if (e.target.closest('button, input, select, .org-switcher, .top-controls, .collapsed-refresh-btn')) return;
+        if (e.button !== 0) return;
+
+        dragStartScreen = { x: e.screenX, y: e.screenY };
+        isDragging = false;
+        const bounds = await window.electronAPI.getWindowPosition();
+        if (bounds) dragStartWinPos = { x: bounds.x, y: bounds.y };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!dragStartScreen || !dragStartWinPos) return;
+        const dx = e.screenX - dragStartScreen.x;
+        const dy = e.screenY - dragStartScreen.y;
+        if (!isDragging && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+            isDragging = true;
+        }
+        if (isDragging) {
+            window.electronAPI.setWindowPosition({
+                x: dragStartWinPos.x + dx,
+                y: dragStartWinPos.y + dy
+            });
+        }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (!dragStartScreen) return;
+        if (!isDragging && onClick) {
+            onClick(e);
+        }
+        dragStartScreen = null;
+        dragStartWinPos = null;
+        isDragging = false;
+    });
+}
 
 // DOM elements
 const elements = {
@@ -41,6 +86,13 @@ const elements = {
     // Footer
     lastUpdate: document.getElementById('lastUpdate'),
     footerRefreshBtn: document.getElementById('footerRefreshBtn'),
+
+    // Collapsed bar
+    collapsedBar: document.getElementById('collapsedBar'),
+    collapsedProgress: document.getElementById('collapsedProgress'),
+    collapsedPercent: document.getElementById('collapsedPercent'),
+    collapsedReset: document.getElementById('collapsedReset'),
+    collapsedRefreshBtn: document.getElementById('collapsedRefreshBtn'),
 
     // Opacity
     opacitySlider: document.getElementById('opacitySlider')
@@ -79,6 +131,20 @@ function setupEventListeners() {
         applyOpacity(value);
         window.electronAPI.saveOpacity(value);
     });
+
+    // Manual drag + collapse/expand on click (for both header and collapsed bar)
+    setupManualDrag(elements.widgetContainer, (e) => {
+        const inHeader = e.target.closest('.drag-handle');
+        const inCollapsed = e.target.closest('.collapsed-bar');
+        if (!inHeader && !inCollapsed) return;
+        if (e.target.closest('button, input, select, .org-switcher, .top-controls, .collapsed-refresh-btn')) return;
+        // Only toggle when main content is showing or already collapsed
+        if (elements.mainContent.style.display === 'none' && !isCollapsed) return;
+        toggleCollapse();
+    });
+
+    // Collapsed refresh button
+    elements.collapsedRefreshBtn.addEventListener('click', () => doCollapsedRefresh());
 
     // Org switcher toggle
     elements.orgCurrentBtn.addEventListener('click', () => {
@@ -198,6 +264,65 @@ async function switchOrg(orgId) {
     startAutoUpdate();
 }
 
+// Collapse/expand
+function toggleCollapse() {
+    isCollapsed = !isCollapsed;
+    const topControls = elements.widgetContainer.querySelector('.top-controls');
+    if (isCollapsed) {
+        elements.mainContent.style.display = 'none';
+        elements.collapsedBar.style.display = 'flex';
+        elements.orgSwitcher.style.display = 'none';
+        topControls.style.display = 'none';
+        updateCollapsedBar();
+    } else {
+        elements.collapsedBar.style.display = 'none';
+        elements.mainContent.style.display = 'flex';
+        topControls.style.display = '';
+        renderOrgSwitcher();
+    }
+    fitWindow();
+}
+
+function updateCollapsedBar() {
+    if (!latestUsageData) return;
+    const sessionUtil = latestUsageData.five_hour?.utilization || 0;
+    const pct = Math.min(Math.max(sessionUtil, 0), 100);
+
+    elements.collapsedProgress.style.width = `${pct}%`;
+    elements.collapsedProgress.classList.remove('warning', 'danger');
+    if (pct >= 90) elements.collapsedProgress.classList.add('danger');
+    else if (pct >= 75) elements.collapsedProgress.classList.add('warning');
+
+    elements.collapsedPercent.textContent = `${Math.round(pct)}%`;
+
+    // Short reset time
+    const resetsAt = latestUsageData.five_hour?.resets_at;
+    if (resetsAt) {
+        const diff = new Date(resetsAt) - new Date();
+        if (diff <= 0) {
+            elements.collapsedReset.textContent = 'resetting...';
+        } else {
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            elements.collapsedReset.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        }
+    } else {
+        elements.collapsedReset.textContent = '';
+    }
+}
+
+async function doCollapsedRefresh() {
+    if (!credentials.sessionKey || !credentials.organizationId) return;
+    elements.collapsedRefreshBtn.classList.add('spinning');
+    try {
+        const data = await window.electronAPI.fetchUsageData();
+        updateUI(data);
+    } catch (error) {
+        console.error('Refresh failed:', error);
+    }
+    elements.collapsedRefreshBtn.classList.remove('spinning');
+}
+
 // Opacity management
 async function loadOpacity() {
     try {
@@ -272,7 +397,12 @@ function updateUI(data) {
         return;
     }
 
-    showMainContent();
+    if (isCollapsed) {
+        // Stay collapsed, just update data
+        updateCollapsedBar();
+    } else {
+        showMainContent();
+    }
     refreshTimers();
     startCountdown();
     updateLastUpdated();
@@ -285,6 +415,9 @@ let weeklyResetTriggered = false;
 
 function refreshTimers() {
     if (!latestUsageData) return;
+
+    // Update collapsed bar if collapsed
+    if (isCollapsed) updateCollapsedBar();
 
     // Session (five_hour)
     const sessionUtil = latestUsageData.five_hour?.utilization || 0;
@@ -416,6 +549,8 @@ function fitWindow() {
 
 // UI State Management
 function showLoading() {
+    isCollapsed = false;
+    elements.collapsedBar.style.display = 'none';
     elements.loadingContainer.style.display = 'flex';
     elements.loginContainer.style.display = 'none';
     elements.noUsageContainer.style.display = 'none';
@@ -424,6 +559,8 @@ function showLoading() {
 }
 
 function showLoginRequired() {
+    isCollapsed = false;
+    elements.collapsedBar.style.display = 'none';
     elements.loadingContainer.style.display = 'none';
     elements.loginContainer.style.display = 'flex';
     elements.noUsageContainer.style.display = 'none';
@@ -435,6 +572,8 @@ function showLoginRequired() {
 }
 
 function showNoUsage() {
+    isCollapsed = false;
+    elements.collapsedBar.style.display = 'none';
     elements.loadingContainer.style.display = 'none';
     elements.loginContainer.style.display = 'none';
     elements.noUsageContainer.style.display = 'flex';
@@ -444,6 +583,8 @@ function showNoUsage() {
 }
 
 function showAutoLoginAttempt() {
+    isCollapsed = false;
+    elements.collapsedBar.style.display = 'none';
     elements.loadingContainer.style.display = 'none';
     elements.loginContainer.style.display = 'none';
     elements.noUsageContainer.style.display = 'none';
@@ -454,6 +595,7 @@ function showAutoLoginAttempt() {
 }
 
 function showMainContent() {
+    elements.collapsedBar.style.display = 'none';
     elements.loadingContainer.style.display = 'none';
     elements.loginContainer.style.display = 'none';
     elements.noUsageContainer.style.display = 'none';

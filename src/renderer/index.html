@@ -80,6 +80,21 @@
                 </div>
             </div>
 
+            <!-- Collapsed View -->
+            <div class="collapsed-bar" id="collapsedBar" style="display: none;">
+                <div class="collapsed-progress-track">
+                    <div class="progress-fill session" id="collapsedProgress" style="width: 0%"></div>
+                </div>
+                <span class="collapsed-percent" id="collapsedPercent">0%</span>
+                <span class="collapsed-reset" id="collapsedReset"></span>
+                <button class="collapsed-refresh-btn" id="collapsedRefreshBtn" title="Refresh">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M23 4v6h-6M1 20v-6h6" />
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                    </svg>
+                </button>
+            </div>
+
             <!-- Main Content -->
             <div class="content" id="mainContent" style="display: none;">
                 <!-- Session Usage (five_hour) -->
