@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-widget",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "description": "Desktop widget for Claude.ai usage monitoring",
   "main": "main.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "widget",
     "electron"
   ],
-  "author": "Your Name",
+  "author": "Dmitry Shulgachik",
   "license": "MIT",
   "devDependencies": {
     "cross-env": "^10.1.0",
@@ -27,7 +27,7 @@
     "electron-store": "^8.2.0"
   },
   "build": {
-    "appId": "com.claudeusage.widget",
+    "appId": "dev.raerten.claude-usage-widget",
     "productName": "Claude Usage Widget",
     "win": {
       "target": [
