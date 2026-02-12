@@ -445,7 +445,7 @@ body {
 }
 
 .footer-refresh-btn.spinning svg {
-    animation: spin-refresh 0.8s linear;
+    animation: spin-refresh 0.8s linear infinite;
 }
 
 /* ── Settings overlay ── */

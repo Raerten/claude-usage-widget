@@ -56,7 +56,9 @@ async function init() {
     if (credentials.sessionKey && credentials.organizationId) {
         renderOrgSwitcher();
         showMainContent();
+        elements.footerRefreshBtn.classList.add('spinning');
         await fetchUsageData();
+        elements.footerRefreshBtn.classList.remove('spinning');
         startAutoUpdate();
     } else {
         showLoginRequired();
