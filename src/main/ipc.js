@@ -49,6 +49,12 @@ function registerIpcHandlers() {
 
   ipcMain.on('open-external', (event, url) => shell.openExternal(url));
 
+  ipcMain.handle('get-opacity', () => store.getOpacity());
+  ipcMain.handle('save-opacity', (event, value) => {
+    store.saveOpacity(value);
+    return true;
+  });
+
   ipcMain.handle('fetch-usage-data', async () => {
     console.log('[Main] fetch-usage-data handler called');
     try {

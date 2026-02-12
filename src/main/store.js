@@ -27,4 +27,7 @@ module.exports = {
 
   getWindowPosition: () => store.get('windowPosition'),
   saveWindowPosition: (x, y) => store.set('windowPosition', { x, y }),
+
+  getOpacity: () => store.get('widgetOpacity', 90),
+  saveOpacity: (value) => store.set('widgetOpacity', value),
 };

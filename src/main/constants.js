@@ -5,8 +5,8 @@ module.exports = {
 
   USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
 
-  WIDGET_WIDTH: 480,
-  WIDGET_HEIGHT: 140,
+  WIDGET_WIDTH: 340,
+  WIDGET_HEIGHT: 300,
   LOGIN_WINDOW_WIDTH: 800,
   LOGIN_WINDOW_HEIGHT: 700,
 

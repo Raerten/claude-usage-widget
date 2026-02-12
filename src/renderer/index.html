@@ -5,50 +5,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude Usage Widget</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
     <div id="app">
         <div class="widget-container" id="widgetContainer">
-            <!-- Title Bar -->
-            <div class="title-bar" id="titleBar">
-                <div class="title">
-                    <img src="../../assets/logo.png" alt="Logo" class="app-logo">
-                    <span>Claude Usage</span>
-                </div>
-                <div class="controls">
-                    <button class="control-btn settings-btn" id="settingsBtn" title="Settings">⚙️</button>
-                    <button class="control-btn refresh-btn" id="refreshBtn" title="Refresh">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M23 4v6h-6M1 20v-6h6" />
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                        </svg>
-                    </button>
-                    <button class="control-btn minimize-btn" id="minimizeBtn" title="Minimise to System Tray">−</button>
-                    <button class="control-btn close-btn" id="closeBtn" title="Exit Application">×</button>
+            <!-- Drag Handle -->
+            <div class="drag-handle" id="dragHandle">
+                <div class="top-bar">
+                    <div class="status-dot" id="statusDot"></div>
+                    <div class="top-controls">
+                        <div class="opacity-control">
+                            <input type="range" id="opacitySlider" min="30" max="100" value="90" class="opacity-slider">
+                            <span class="opacity-label">DARK</span>
+                        </div>
+                        <button class="icon-btn settings-btn" id="settingsBtn" title="Settings">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Loading State -->
-            <div class="loading-container" id="loadingContainer">
+            <div class="state-container" id="loadingContainer">
                 <div class="spinner"></div>
                 <p>Loading usage data...</p>
             </div>
 
             <!-- Login Required State -->
-            <div class="login-container" id="loginContainer" style="display: none;">
+            <div class="state-container" id="loginContainer" style="display: none;">
                 <div class="login-content">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                         <polyline points="10 17 15 12 10 7" />
                         <line x1="15" y1="12" x2="3" y2="12" />
                     </svg>
-                    <div class="login-text-group">
+                    <div class="login-text">
                         <h3>Login Required</h3>
                         <p>Log in to view usage stats</p>
                     </div>
@@ -57,12 +53,12 @@
             </div>
 
             <!-- No Usage State -->
-            <div class="no-usage-container" id="noUsageContainer" style="display: none;">
+            <div class="state-container" id="noUsageContainer" style="display: none;">
                 <div class="no-usage-content">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
-                    <div class="no-usage-text-group">
+                    <div>
                         <h3>No Usage Yet</h3>
                         <p>Start chatting with Claude to see your usage stats</p>
                     </div>
@@ -70,10 +66,10 @@
             </div>
 
             <!-- Auto-Login Attempt State -->
-            <div class="auto-login-container" id="autoLoginContainer" style="display: none;">
+            <div class="state-container" id="autoLoginContainer" style="display: none;">
                 <div class="auto-login-content">
-                    <div class="spinner"></div>
-                    <div class="auto-login-text-group">
+                    <div class="spinner small"></div>
+                    <div>
                         <h3>Trying to auto-login...</h3>
                         <p>Please wait while we reconnect</p>
                     </div>
@@ -82,53 +78,71 @@
 
             <!-- Main Content -->
             <div class="content" id="mainContent" style="display: none;">
-                <!-- Session Usage -->
-                <div class="usage-section">
-                    <span class="usage-label">Current Session</span>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="sessionProgress" style="width: 0%"></div>
+                <!-- Session Usage (five_hour) -->
+                <div class="usage-row">
+                    <div class="usage-header">
+                        <span class="usage-label">Current session</span>
+                        <span class="usage-percent" id="sessionPercentage">0% used</span>
                     </div>
-                    <span class="usage-percentage" id="sessionPercentage">0%</span>
-                    <div class="timer-container">
-                        <div class="timer-text" id="sessionTimeText">--:--</div>
-                        <svg class="mini-timer" width="24" height="24" viewBox="0 0 24 24">
-                            <circle class="timer-bg" cx="12" cy="12" r="10" />
-                            <circle class="timer-progress" id="sessionTimer" cx="12" cy="12" r="10"
-                                style="stroke-dasharray: 63; stroke-dashoffset: 63" />
-                        </svg>
+                    <div class="progress-track">
+                        <div class="progress-fill session" id="sessionProgress" style="width: 0%"></div>
+                    </div>
+                    <div class="usage-meta">
+                        <span class="reset-text" id="sessionResetText"></span>
                     </div>
                 </div>
 
-                <!-- Weekly Usage -->
-                <div class="usage-section">
-                    <span class="usage-label">Weekly Limit</span>
-                    <div class="progress-bar">
+                <!-- Weekly Usage (seven_day) -->
+                <div class="usage-row">
+                    <div class="usage-header">
+                        <span class="usage-label">Current week <span class="label-detail">(all models)</span></span>
+                        <span class="usage-percent" id="weeklyPercentage">0% used</span>
+                    </div>
+                    <div class="progress-track">
                         <div class="progress-fill weekly" id="weeklyProgress" style="width: 0%"></div>
                     </div>
-                    <span class="usage-percentage" id="weeklyPercentage">0%</span>
-                    <div class="timer-container">
-                        <div class="timer-text" id="weeklyTimeText">--:--</div>
-                        <svg class="mini-timer" width="24" height="24" viewBox="0 0 24 24">
-                            <circle class="timer-bg" cx="12" cy="12" r="10" />
-                            <circle class="timer-progress weekly" id="weeklyTimer" cx="12" cy="12" r="10"
-                                style="stroke-dasharray: 63; stroke-dashoffset: 63" />
-                        </svg>
+                    <div class="usage-meta">
+                        <span class="reset-text" id="weeklyResetText"></span>
                     </div>
                 </div>
 
-                <!-- Hidden Footer element (removed) -->
-                <span id="lastUpdate" style="display: none;"></span>
+                <!-- Weekly Sonnet Usage (seven_day_sonnet) -->
+                <div class="usage-row" id="sonnetRow" style="display: none;">
+                    <div class="usage-header">
+                        <span class="usage-label">Current week <span class="label-detail">(Sonnet only)</span></span>
+                        <span class="usage-percent" id="sonnetPercentage">0% used</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill sonnet" id="sonnetProgress" style="width: 0%"></div>
+                    </div>
+                    <div class="usage-meta">
+                        <span class="reset-text" id="sonnetResetText"></span>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="footer-divider"></div>
+                <div class="footer-row">
+                    <div class="footer-left">
+                        <span class="updated-dot"></span>
+                        <span class="updated-text" id="lastUpdate">Updated --:--</span>
+                    </div>
+                    <button class="footer-refresh-btn" id="footerRefreshBtn" title="Refresh">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M23 4v6h-6M1 20v-6h6" />
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Settings Overlay -->
             <div class="settings-overlay" id="settingsOverlay" style="display: none;">
-                <div class="settings-content">
-                    <button class="icon-close-settings-btn" id="closeSettingsBtn" title="Close">×</button>
+                <button class="icon-close-settings" id="closeSettingsBtn" title="Close">&times;</button>
+                <div class="settings-body">
                     <p class="disclaimer">
-                        <strong>Disclaimer:</strong> Unofficial tool not affiliated with Anthropic. Use at your own
-                        discretion.
+                        <strong>Disclaimer:</strong> Unofficial tool not affiliated with Anthropic. Use at your own discretion.
                     </p>
-
                     <button class="coffee-btn" id="coffeeBtn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -140,10 +154,7 @@
                         </svg>
                         If you find this useful, buy me a coffee!
                     </button>
-
-                    <div class="settings-actions">
-                        <button class="logout-btn" id="logoutBtn">Log Out</button>
-                    </div>
+                    <button class="logout-btn" id="logoutBtn">Log Out</button>
                 </div>
             </div>
         </div>
