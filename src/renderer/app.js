@@ -118,7 +118,7 @@ async function loadOpacity() {
 }
 
 function applyOpacity(value) {
-    elements.widgetContainer.style.opacity = value / 100;
+    // Opacity is applied to the Electron window via IPC, not CSS
 }
 
 // Manual refresh (footer button)

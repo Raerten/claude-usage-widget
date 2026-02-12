@@ -11,7 +11,8 @@ function createMainWindow() {
     width: WIDGET_WIDTH,
     height: WIDGET_HEIGHT,
     frame: false,
-    transparent: true,
+    transparent: false,
+    hasShadow: false,
     alwaysOnTop: true,
     resizable: false,
     skipTaskbar: false,
@@ -33,6 +34,9 @@ function createMainWindow() {
 
   mainWindow.setAlwaysOnTop(true, 'floating');
   mainWindow.setVisibleOnAllWorkspaces(true);
+
+  const savedOpacity = store.getOpacity() || 90;
+  mainWindow.setOpacity(savedOpacity / 100);
 
   mainWindow.on('move', () => {
     const position = mainWindow.getBounds();

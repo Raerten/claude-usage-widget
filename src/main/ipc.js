@@ -52,6 +52,8 @@ function registerIpcHandlers() {
   ipcMain.handle('get-opacity', () => store.getOpacity());
   ipcMain.handle('save-opacity', (event, value) => {
     store.saveOpacity(value);
+    const mainWindow = getMainWindow();
+    if (mainWindow) mainWindow.setOpacity(value / 100);
     return true;
   });
 
