@@ -36,14 +36,7 @@ const elements = {
     footerRefreshBtn: document.getElementById('footerRefreshBtn'),
 
     // Opacity
-    opacitySlider: document.getElementById('opacitySlider'),
-
-    // Settings
-    settingsBtn: document.getElementById('settingsBtn'),
-    settingsOverlay: document.getElementById('settingsOverlay'),
-    closeSettingsBtn: document.getElementById('closeSettingsBtn'),
-    logoutBtn: document.getElementById('logoutBtn'),
-    coffeeBtn: document.getElementById('coffeeBtn')
+    opacitySlider: document.getElementById('opacitySlider')
 };
 
 // Initialize
@@ -76,24 +69,10 @@ function setupEventListeners() {
         window.electronAPI.saveOpacity(value);
     });
 
-    // Settings
-    elements.settingsBtn.addEventListener('click', () => {
-        elements.settingsOverlay.style.display = 'flex';
-    });
-
-    elements.closeSettingsBtn.addEventListener('click', () => {
-        elements.settingsOverlay.style.display = 'none';
-    });
-
-    elements.logoutBtn.addEventListener('click', async () => {
-        await window.electronAPI.deleteCredentials();
-        elements.settingsOverlay.style.display = 'none';
+    // Listen for logout from tray
+    window.electronAPI.onLogout(() => {
+        credentials = { sessionKey: null, organizationId: null };
         showLoginRequired();
-        window.electronAPI.openLogin();
-    });
-
-    elements.coffeeBtn.addEventListener('click', () => {
-        window.electronAPI.openExternal('https://paypal.me/SlavomirDurej?country.x=GB&locale.x=en_GB');
     });
 
     // Listen for login success

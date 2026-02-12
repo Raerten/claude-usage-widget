@@ -11,8 +11,8 @@ function createTray(handlers) {
       { label: 'Show Widget', click: handlers.onShow },
       { label: 'Refresh', click: handlers.onRefresh },
       { type: 'separator' },
-      { label: 'Settings', click: () => { /* TODO */ } },
       { label: 'Re-login', click: handlers.onReLogin },
+      { label: 'Log Out', click: handlers.onLogout },
       { type: 'separator' },
       { label: 'Exit', click: () => app.quit() },
     ]);

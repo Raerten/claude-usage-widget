@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSilentLoginFailed: (callback) => {
     ipcRenderer.on('silent-login-failed', () => callback());
   },
+  onLogout: (callback) => {
+    ipcRenderer.on('logout', () => callback());
+  },
 
   // Opacity
   getOpacity: () => ipcRenderer.invoke('get-opacity'),

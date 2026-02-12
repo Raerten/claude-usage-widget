@@ -95,14 +95,6 @@ body {
     background: #f0a44a;
 }
 
-.opacity-label {
-    color: #7a7b8e;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-}
-
 /* ── Icon buttons ── */
 .icon-btn {
     width: 22px;
@@ -278,33 +270,28 @@ body {
     transition: width 0.5s ease;
 }
 
-/* Session (bright blue) */
+/* Session (bright blue, fades in from left) */
 .progress-fill.session {
-    background: linear-gradient(90deg, #4a8eff, #6aa0ff);
-    box-shadow: 0 0 8px rgba(74, 142, 255, 0.25);
+    background: linear-gradient(90deg, rgba(74, 142, 255, 0) 0%, #4a8eff 40%, #6aa0ff 100%);
 }
 
-/* Weekly (orange/amber) */
+/* Weekly (orange/amber, fades in from left) */
 .progress-fill.weekly {
-    background: linear-gradient(90deg, #e8943a, #f0b040);
-    box-shadow: 0 0 8px rgba(232, 148, 58, 0.25);
+    background: linear-gradient(90deg, rgba(232, 148, 58, 0) 0%, #e8943a 40%, #f0b040 100%);
 }
 
-/* Sonnet (blue, slightly different shade) */
+/* Sonnet (blue, fades in from left) */
 .progress-fill.sonnet {
-    background: linear-gradient(90deg, #4a8eff, #6aa0ff);
-    box-shadow: 0 0 8px rgba(74, 142, 255, 0.25);
+    background: linear-gradient(90deg, rgba(74, 142, 255, 0) 0%, #4a8eff 40%, #6aa0ff 100%);
 }
 
 /* Warning / danger overrides */
 .progress-fill.warning {
-    background: linear-gradient(90deg, #e8943a, #f0b040);
-    box-shadow: 0 0 8px rgba(232, 148, 58, 0.25);
+    background: linear-gradient(90deg, rgba(232, 148, 58, 0) 0%, #e8943a 40%, #f0b040 100%);
 }
 
 .progress-fill.danger {
-    background: linear-gradient(90deg, #e05252, #f06868);
-    box-shadow: 0 0 8px rgba(224, 82, 82, 0.25);
+    background: linear-gradient(90deg, rgba(224, 82, 82, 0) 0%, #e05252 40%, #f06868 100%);
 }
 
 /* ── Reset meta text ── */

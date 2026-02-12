@@ -41,6 +41,11 @@ app.whenReady().then(() => {
       store.deleteCredentials();
       createLoginWindow();
     },
+    onLogout: () => {
+      store.deleteCredentials();
+      const mainWindow = getMainWindow();
+      if (mainWindow) mainWindow.webContents.send('logout');
+    },
     onToggle: () => {
       const mainWindow = getMainWindow();
       if (mainWindow) {
