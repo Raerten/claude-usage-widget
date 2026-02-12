@@ -276,6 +276,7 @@ function updateUI(data) {
     refreshTimers();
     startCountdown();
     updateLastUpdated();
+    fitWindow();
 }
 
 // Track if we've already triggered a refresh for expired timers
@@ -404,6 +405,15 @@ function updateLastUpdated() {
     elements.lastUpdate.textContent = `Updated ${h}:${m}`;
 }
 
+// Resize window to fit content
+function fitWindow() {
+    requestAnimationFrame(() => {
+        const container = document.getElementById('widgetContainer');
+        const height = container.scrollHeight + 2; // +2 for border
+        window.electronAPI.resizeToContent(height);
+    });
+}
+
 // UI State Management
 function showLoading() {
     elements.loadingContainer.style.display = 'flex';
@@ -421,6 +431,7 @@ function showLoginRequired() {
     elements.mainContent.style.display = 'none';
     elements.orgSwitcher.style.display = 'none';
     stopAutoUpdate();
+    fitWindow();
 }
 
 function showNoUsage() {
@@ -429,6 +440,7 @@ function showNoUsage() {
     elements.noUsageContainer.style.display = 'flex';
     elements.autoLoginContainer.style.display = 'none';
     elements.mainContent.style.display = 'none';
+    fitWindow();
 }
 
 function showAutoLoginAttempt() {
@@ -438,6 +450,7 @@ function showAutoLoginAttempt() {
     elements.autoLoginContainer.style.display = 'flex';
     elements.mainContent.style.display = 'none';
     stopAutoUpdate();
+    fitWindow();
 }
 
 function showMainContent() {

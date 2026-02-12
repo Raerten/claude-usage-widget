@@ -1,5 +1,6 @@
 const { ipcMain, session, shell, app } = require('electron');
 const store = require('./store');
+const { WIDGET_WIDTH } = require('./constants');
 const { fetchUsageData } = require('./api');
 const { getMainWindow } = require('./window');
 const { createLoginWindow, attemptSilentLogin } = require('./auth');
@@ -49,6 +50,13 @@ function registerIpcHandlers() {
   });
 
   ipcMain.on('open-external', (event, url) => shell.openExternal(url));
+
+  ipcMain.on('resize-to-content', (event, height) => {
+    const mainWindow = getMainWindow();
+    if (mainWindow) {
+      mainWindow.setSize(WIDGET_WIDTH, Math.round(height));
+    }
+  });
 
   ipcMain.handle('get-opacity', () => store.getOpacity());
   ipcMain.handle('save-opacity', (event, value) => {

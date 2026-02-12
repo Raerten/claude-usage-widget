@@ -14,7 +14,6 @@ body {
 
 #app {
     width: 100%;
-    height: 100vh;
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -307,7 +306,7 @@ body {
 
 /* ── Main content ── */
 .content {
-    padding: 2px 18px 12px;
+    padding: 2px 18px 2px;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -396,7 +395,6 @@ body {
 .footer-divider {
     height: 1px;
     background: #3c3c3c;
-    margin: 8px 0 0;
 }
 
 .footer-row {
