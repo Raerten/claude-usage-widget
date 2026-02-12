@@ -74,7 +74,6 @@ function registerIpcHandlers() {
       if (error.message === 'SessionExpired') {
         console.log('[Main] Session expired, attempting silent re-login...');
         attemptSilentLogin();
-        throw new Error('SessionExpired');
       }
       throw error;
     }

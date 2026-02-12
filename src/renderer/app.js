@@ -138,6 +138,7 @@ function setupEventListeners() {
         credentials.organizationId = orgId;
         renderOrgSwitcher();
         latestUsageData = null;
+        stopAutoUpdate();
         await fetchUsageData();
         startAutoUpdate();
     });
@@ -188,8 +189,9 @@ async function switchOrg(orgId) {
     elements.orgSwitcher.classList.remove('open');
     renderOrgSwitcher();
 
-    // Re-fetch usage for the new org
+    // Stop old timer, fetch for new org, restart timer
     latestUsageData = null;
+    stopAutoUpdate();
     await fetchUsageData();
     startAutoUpdate();
 }
@@ -210,10 +212,17 @@ function applyOpacity(value) {
     // Opacity is applied to the Electron window via IPC, not CSS
 }
 
-// Manual refresh (footer button)
+// Manual refresh (footer button) — just re-fetch, don't trigger login flow on error
 async function doRefresh() {
+    if (!credentials.sessionKey || !credentials.organizationId) return;
+
     elements.footerRefreshBtn.classList.add('spinning');
-    await fetchUsageData();
+    try {
+        const data = await window.electronAPI.fetchUsageData();
+        updateUI(data);
+    } catch (error) {
+        console.error('Refresh failed:', error);
+    }
     elements.footerRefreshBtn.classList.remove('spinning');
 }
 
