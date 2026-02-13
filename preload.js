@@ -44,6 +44,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('fetch-retry', (event, data) => callback(data));
   },
 
+  // Collapsed state
+  getCollapsed: () => ipcRenderer.invoke('get-collapsed'),
+  saveCollapsed: (value) => ipcRenderer.invoke('save-collapsed', value),
+
   // Opacity
   getOpacity: () => ipcRenderer.invoke('get-opacity'),
   saveOpacity: (value) => ipcRenderer.invoke('save-opacity', value),

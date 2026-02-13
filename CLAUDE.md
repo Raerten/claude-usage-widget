@@ -21,7 +21,7 @@ preload.js               # IPC bridge (contextBridge), exposes electronAPI to re
 preload-logs.js          # IPC bridge for log window, exposes logsAPI
 src/main/
   constants.js           # URLs, dimensions, polling intervals
-  store.js               # electron-store wrapper (credentials, orgs, window pos, opacity, API cookies)
+  store.js               # electron-store wrapper (credentials, orgs, window pos, opacity, collapsed state, API cookies)
   window.js              # Main BrowserWindow creation, position persistence, opacity
   logManager.js          # Console interceptor, circular buffer (1000), broadcasts to log window
   logWindow.js           # Log window factory (singleton, 700x500, frameless, resizable, always-on-top)
@@ -98,6 +98,8 @@ Six mutually exclusive states managed by show* functions:
 - Shows session (five_hour) percentage only, with compact reset countdown
 - Window resized to 39px height; border removed
 - Has its own refresh button
+- Collapsed/expanded preference persisted to store (`widgetCollapsed`); restored on app restart and re-login
+- Non-authenticated states (login, auto-login) force full view without overwriting the saved preference
 
 ## Commands
 
@@ -115,6 +117,7 @@ yarn build:win           # Build Windows installer to dist/
 - `get-credentials`, `save-credentials`, `delete-credentials`
 - `get-window-position`, `set-window-position`
 - `get-opacity`, `save-opacity`
+- `get-collapsed`, `save-collapsed`
 - `get-organizations`, `set-selected-org`
 - `fetch-usage-data`
 - `get-buffered-logs`, `clear-logs`
@@ -140,6 +143,8 @@ yarn build:win           # Build Windows installer to dist/
 
 ## Development Notes
 
+- `index.html` default visibility: `loadingContainer` is visible, all others have `display: none`. Any new UI state function must explicitly hide it.
+- `showCollapsed()` is the canonical way to enter collapsed mode (hides all state containers); `toggleCollapse()` and init/login-success both use it
 - `auth.js` imports from `api.js` (cookie helpers); reverse import would create circular dependency
 - Quick module syntax check: `node -e "require('./src/main/store'); require('./src/main/api');"` (works for non-Electron modules)
 - Adding a secondary window: create `src/main/<name>Window.js` (singleton pattern), separate `preload-<name>.js`, renderer files in `src/renderer/`, wire IPC in `ipc.js`, add tray handler in `tray.js` + `main.js`

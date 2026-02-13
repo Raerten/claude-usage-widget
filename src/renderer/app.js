@@ -113,8 +113,13 @@ async function init() {
     organizations = await window.electronAPI.getOrganizations();
 
     if (credentials.sessionKey && credentials.organizationId) {
+        const savedCollapsed = await window.electronAPI.getCollapsed();
         renderOrgSwitcher();
-        showMainContent();
+        if (savedCollapsed) {
+            showCollapsed();
+        } else {
+            showMainContent();
+        }
         elements.footerRefreshBtn.classList.add('spinning');
         await fetchUsageData();
         elements.footerRefreshBtn.classList.remove('spinning');
@@ -187,8 +192,13 @@ function setupEventListeners() {
             sessionKey: data.sessionKey,
             organizationId: data.organizationId,
         });
+        const savedCollapsed = await window.electronAPI.getCollapsed();
         renderOrgSwitcher();
-        showMainContent();
+        if (savedCollapsed) {
+            showCollapsed();
+        } else {
+            showMainContent();
+        }
         await fetchUsageData();
         startAutoUpdate();
     });
@@ -293,18 +303,28 @@ async function switchOrg(orgId) {
 // Collapse/expand
 const COLLAPSED_HEIGHT = 39;
 
+function showCollapsed() {
+    isCollapsed = true;
+    document.getElementById('dragHandle').style.display = 'none';
+    elements.loadingContainer.style.display = 'none';
+    elements.loginContainer.style.display = 'none';
+    elements.noUsageContainer.style.display = 'none';
+    elements.autoLoginContainer.style.display = 'none';
+    elements.mainContent.style.display = 'none';
+    elements.collapsedBar.style.display = 'flex';
+    elements.widgetContainer.style.border = 'none';
+    window.electronAPI.resizeToContent(COLLAPSED_HEIGHT);
+}
+
 function toggleCollapse() {
-    isCollapsed = !isCollapsed;
-    const dragHandle = document.getElementById('dragHandle');
-    if (isCollapsed) {
-        dragHandle.style.display = 'none';
-        elements.mainContent.style.display = 'none';
-        elements.collapsedBar.style.display = 'flex';
-        elements.widgetContainer.style.border = 'none';
+    const willCollapse = !isCollapsed;
+    window.electronAPI.saveCollapsed(willCollapse);
+    if (willCollapse) {
+        showCollapsed();
         updateCollapsedBar();
-        window.electronAPI.resizeToContent(COLLAPSED_HEIGHT);
     } else {
-        dragHandle.style.display = '';
+        isCollapsed = false;
+        document.getElementById('dragHandle').style.display = '';
         elements.collapsedBar.style.display = 'none';
         elements.mainContent.style.display = 'flex';
         elements.widgetContainer.style.border = '';

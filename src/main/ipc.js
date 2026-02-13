@@ -65,6 +65,12 @@ function registerIpcHandlers() {
     }
   });
 
+  ipcMain.handle('get-collapsed', () => store.getCollapsed());
+  ipcMain.handle('save-collapsed', (event, value) => {
+    store.saveCollapsed(value);
+    return true;
+  });
+
   ipcMain.handle('get-opacity', () => store.getOpacity());
   ipcMain.handle('save-opacity', (event, value) => {
     store.saveOpacity(value);

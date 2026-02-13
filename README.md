@@ -10,7 +10,7 @@ A standalone Windows desktop widget that displays your Claude.ai usage statistic
 - **Visual Progress Bars** - Color-coded: blue/orange default, yellow at 75%+, red at 90%+
 - **Countdown Timers** - Time until each limit resets
 - **Multi-Organization** - Switch between orgs via dropdown or tray menu
-- **Collapsed Mode** - Single-line compact view showing session % only
+- **Collapsed Mode** - Single-line compact view showing session % only; remembers your preference across restarts
 - **Window Opacity** - Adjustable transparency (30-100%)
 - **Log Monitor** - Built-in real-time log viewer for debugging
 - **Auto-refresh** - Updates every 5 minutes; re-fetches automatically after reset
@@ -54,7 +54,7 @@ Output: `dist/Claude-Usage-Widget-Setup.exe`
 
 - **Drag** anywhere on the title bar to move
 - **Refresh** button to update data now
-- **Collapse/Expand** click the drag handle or collapsed bar
+- **Collapse/Expand** click the drag handle or collapsed bar (preference saved across restarts)
 - **Opacity slider** in the top bar (30-100%)
 - **Org switcher** dropdown when multiple organizations exist
 - **Log button** opens the log monitoring window

@@ -65,4 +65,7 @@ module.exports = {
 
   getLogWindowPosition: () => store.get('logWindowPosition'),
   saveLogWindowPosition: (x, y) => store.set('logWindowPosition', { x, y }),
+
+  getCollapsed: () => store.get('widgetCollapsed', false),
+  saveCollapsed: (value) => store.set('widgetCollapsed', !!value),
 };
