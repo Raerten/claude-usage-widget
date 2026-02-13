@@ -86,6 +86,10 @@ Left-click toggles widget visibility.
 
 MIT
 
+## Acknowledgments
+
+Based on [claude-usage-widget](https://github.com/SlavomirDurej/claude-usage-widget) by SlavomirDurej.
+
 ## Disclaimer
 
 Unofficial tool, not affiliated with or endorsed by Anthropic. Use at your own discretion.
