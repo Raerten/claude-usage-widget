@@ -83,6 +83,10 @@ const elements = {
     sonnetProgress: document.getElementById('sonnetProgress'),
     sonnetResetText: document.getElementById('sonnetResetText'),
 
+    // Status indicators
+    statusDot: document.getElementById('statusDot'),
+    updatedDot: document.querySelector('.updated-dot'),
+
     // Footer
     lastUpdate: document.getElementById('lastUpdate'),
     footerRefreshBtn: document.getElementById('footerRefreshBtn'),
@@ -201,13 +205,23 @@ function setupEventListeners() {
         showLoginRequired();
     });
 
+    // Listen for API retry progress from main process
+    window.electronAPI.onFetchRetry(() => {
+        totalAttempts++;
+        showRetryStatus();
+    });
+
     // Listen for org switch from tray
     window.electronAPI.onOrgSwitched(async (orgId) => {
+        // Stop auto-update FIRST to prevent stale fetches for the old org
+        stopAutoUpdate();
+        latestUsageData = null;
+        retryCount = 0;
+        totalAttempts = 0;
         credentials.organizationId = orgId;
         renderOrgSwitcher();
-        latestUsageData = null;
-        stopAutoUpdate();
-        await fetchUsageData();
+        showSwitchingStatus('Switching...');
+        await fetchUsageData({ skipRelogin: true });
         startAutoUpdate();
     });
 }
@@ -252,15 +266,19 @@ async function switchOrg(orgId) {
         return;
     }
 
+    // Stop auto-update FIRST to prevent stale fetches for the old org
+    stopAutoUpdate();
+    latestUsageData = null;
+    retryCount = 0;
+    totalAttempts = 0;
+
     credentials.organizationId = orgId;
-    await window.electronAPI.setSelectedOrg(orgId);
     elements.orgSwitcher.classList.remove('open');
     renderOrgSwitcher();
+    showSwitchingStatus('Switching...');
 
-    // Stop old timer, fetch for new org, restart timer
-    latestUsageData = null;
-    stopAutoUpdate();
-    await fetchUsageData();
+    await window.electronAPI.setSelectedOrg(orgId);
+    await fetchUsageData({ skipRelogin: true });
     startAutoUpdate();
 }
 
@@ -357,22 +375,76 @@ async function doRefresh() {
     elements.footerRefreshBtn.classList.remove('spinning');
 }
 
+// Switching/retrying status indicator
+let pendingRetryTimeout = null;
+let retryCount = 0;       // renderer-level retry rounds
+let totalAttempts = 0;    // total failed attempts across all layers
+let isSwitching = false;  // true while org-switch retry flow is active
+
+function showSwitchingStatus(text) {
+    isSwitching = true;
+    elements.statusDot.classList.add('switching');
+    if (elements.updatedDot) elements.updatedDot.classList.add('switching');
+    elements.lastUpdate.textContent = text || 'Switching...';
+    elements.footerRefreshBtn.classList.add('spinning');
+}
+
+function showRetryStatus() {
+    if (!isSwitching) return; // ignore stale retry events after switching ended
+    showSwitchingStatus(`Retrying (${totalAttempts})...`);
+}
+
+function clearSwitchingStatus() {
+    isSwitching = false;
+    elements.statusDot.classList.remove('switching');
+    if (elements.updatedDot) elements.updatedDot.classList.remove('switching');
+    elements.footerRefreshBtn.classList.remove('spinning');
+    retryCount = 0;
+    totalAttempts = 0;
+    updateLastUpdated();
+}
+
 // Fetch usage data from Claude API
-async function fetchUsageData() {
+async function fetchUsageData(opts = {}) {
     if (!credentials.sessionKey || !credentials.organizationId) {
         showLoginRequired();
         return;
     }
 
+    // Clear any pending retry when a new fetch starts
+    if (pendingRetryTimeout) {
+        clearTimeout(pendingRetryTimeout);
+        pendingRetryTimeout = null;
+    }
+
+    if (opts.skipRelogin && retryCount === 0) {
+        showSwitchingStatus('Switching...');
+    }
+
     try {
         const data = await window.electronAPI.fetchUsageData();
+        clearSwitchingStatus();
         updateUI(data);
     } catch (error) {
         console.error('Error fetching usage data:', error);
         if (error.message.includes('SessionExpired') || error.message.includes('Unauthorized')) {
-            credentials = { sessionKey: null, organizationId: null };
+            if (opts.skipRelogin) {
+                // Org switch 403 — API retries exhausted but session is likely fine.
+                // Schedule another round of retries after a pause.
+                retryCount++;
+                totalAttempts++;
+                showRetryStatus();
+                console.log(`Org switch fetch failed, round #${retryCount}, total attempts: ${totalAttempts}`);
+                pendingRetryTimeout = setTimeout(() => fetchUsageData(
+                    retryCount < 3 ? { skipRelogin: true } : {}
+                ), 5000);
+                return;
+            }
+            clearSwitchingStatus();
             showAutoLoginAttempt();
+            window.electronAPI.attemptSilentLogin();
         } else {
+            clearSwitchingStatus();
             showError('Failed to fetch usage data');
         }
     }
@@ -626,6 +698,10 @@ function stopAutoUpdate() {
     if (updateInterval) {
         clearInterval(updateInterval);
         updateInterval = null;
+    }
+    if (pendingRetryTimeout) {
+        clearTimeout(pendingRetryTimeout);
+        pendingRetryTimeout = null;
     }
 }
 

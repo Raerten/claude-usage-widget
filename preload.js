@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onOrgSwitched: (callback) => {
     ipcRenderer.on('org-switched', (event, orgId) => callback(orgId));
   },
+  onFetchRetry: (callback) => {
+    ipcRenderer.on('fetch-retry', (event, data) => callback(data));
+  },
 
   // Opacity
   getOpacity: () => ipcRenderer.invoke('get-opacity'),
@@ -51,5 +54,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // API
   fetchUsageData: () => ipcRenderer.invoke('fetch-usage-data'),
+  attemptSilentLogin: () => ipcRenderer.send('attempt-silent-login'),
   openExternal: (url) => ipcRenderer.send('open-external', url)
 });

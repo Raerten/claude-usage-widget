@@ -81,15 +81,12 @@ function registerIpcHandlers() {
 
   ipcMain.handle('fetch-usage-data', async () => {
     console.log('[Main] fetch-usage-data handler called');
-    try {
-      return await fetchUsageData();
-    } catch (error) {
-      if (error.message === 'SessionExpired') {
-        console.log('[Main] Session expired, attempting silent re-login...');
-        attemptSilentLogin();
-      }
-      throw error;
-    }
+    return await fetchUsageData();
+  });
+
+  ipcMain.on('attempt-silent-login', () => {
+    console.log('[Main] Renderer requested silent re-login');
+    attemptSilentLogin();
   });
 }
 
