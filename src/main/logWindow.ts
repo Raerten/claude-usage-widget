@@ -62,7 +62,11 @@ export function createLogWindow(): void {
   });
 
   if (process.env.NODE_ENV === 'development') {
-    logWindow.webContents.openDevTools({ mode: 'detach' });
+    logWindow.webContents.on('before-input-event', (_event, input) => {
+      if (input.key === 'F12' && input.type === 'keyDown' && logWindow) {
+        logWindow.webContents.toggleDevTools();
+      }
+    });
   }
 }
 

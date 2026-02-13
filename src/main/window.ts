@@ -57,7 +57,11 @@ export function createMainWindow(): void {
   });
 
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
+    mainWindow.webContents.on('before-input-event', (_event, input) => {
+      if (input.key === 'F12' && input.type === 'keyDown' && mainWindow) {
+        mainWindow.webContents.toggleDevTools();
+      }
+    });
   }
 }
 

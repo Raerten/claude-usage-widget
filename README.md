@@ -44,6 +44,8 @@ yarn build:win
 
 Output: `dist/Claude-Usage-Widget-Setup.exe`
 
+> **Dev tip:** Press **F12** in dev mode to toggle DevTools on any widget window.
+
 ## Usage
 
 1. Launch the widget
