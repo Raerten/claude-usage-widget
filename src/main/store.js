@@ -34,6 +34,7 @@ module.exports = {
     store.delete('sessionKey');
     store.delete('selectedOrganizationId');
     store.delete('organizations');
+    store.delete('apiCookies');
   },
 
   getWindowPosition: () => store.get('windowPosition'),
@@ -41,4 +42,8 @@ module.exports = {
 
   getOpacity: () => store.get('widgetOpacity', 90),
   saveOpacity: (value) => store.set('widgetOpacity', value),
+
+  getApiCookies: () => store.get('apiCookies', {}),
+  saveApiCookies: (cookies) => store.set('apiCookies', cookies),
+  clearApiCookies: () => store.delete('apiCookies'),
 };

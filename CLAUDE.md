@@ -20,7 +20,7 @@ main.js                  # App entry: single-instance lock, app lifecycle, tray 
 preload.js               # IPC bridge (contextBridge), exposes electronAPI to renderer
 src/main/
   constants.js           # URLs, dimensions, polling intervals
-  store.js               # electron-store wrapper (credentials, orgs, window pos, opacity)
+  store.js               # electron-store wrapper (credentials, orgs, window pos, opacity, API cookies)
   window.js              # Main BrowserWindow creation, position persistence, opacity
   auth.js                # Login (visible + silent), cookie polling, org fetching
   api.js                 # Usage API call with session cookie auth
@@ -51,7 +51,10 @@ assets/                  # icon.ico, tray-icon.png
 
 ### Usage Data (src/main/api.js)
 - Endpoint: `https://claude.ai/api/organizations/{orgId}/usage`
-- Auth: `Cookie: sessionKey={key}` header + custom User-Agent
+- Auth: `Cookie: sessionKey={key}` + stored server cookies (e.g. `cf_clearance`) + custom User-Agent
+- Server `set-cookie` headers are captured from all responses (incl. errors) and persisted via electron-store
+- Cookie helpers (`buildCookieHeader`, `storeResponseCookies`) shared between `api.js` and `auth.js`
+- All stored API cookies are cleared on logout via `deleteCredentials()`
 - Response fields used: `five_hour`, `seven_day`, `seven_day_sonnet` (each has `utilization` + `resets_at`)
 - `seven_day_sonnet` row shown only when data exists (utilization > 0 or resets_at present)
 - Auto-refreshes every 5 minutes; auto re-fetches 3s after a reset timer expires
@@ -118,6 +121,11 @@ yarn build:win           # Build Windows installer to dist/
 ### Tray Menu
 - Show Widget / Refresh / [Org radio list if >1] / Re-login / Log Out / Exit
 - Left-click tray icon toggles window visibility
+
+## Development Notes
+
+- `auth.js` imports from `api.js` (cookie helpers); reverse import would create circular dependency
+- Quick module syntax check: `node -e "require('./src/main/store'); require('./src/main/api');"` (works for non-Electron modules)
 
 ## Build Output
 

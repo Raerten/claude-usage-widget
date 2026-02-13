@@ -14,6 +14,7 @@ const {
 const store = require('./store');
 const { getMainWindow } = require('./window');
 const { refreshTrayMenu } = require('./tray');
+const { buildCookieHeader, storeResponseCookies } = require('./api');
 
 let loginWindow = null;
 let silentLoginWindow = null;
@@ -39,10 +40,11 @@ async function checkLoginStatus(state, opts) {
     try {
       const response = await axios.get(ORGANIZATIONS_API, {
         headers: {
-          'Cookie': `sessionKey=${sessionKey}`,
+          'Cookie': buildCookieHeader(sessionKey),
           'User-Agent': USER_AGENT,
         },
       });
+      storeResponseCookies(response);
 
       if (response.data && Array.isArray(response.data) && response.data.length > 0) {
         organizations = response.data.map(org => ({
