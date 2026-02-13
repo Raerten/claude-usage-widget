@@ -39,3 +39,4 @@ yarn-error.log*
 
 nul
 /.yarn/install-state.gz
+.claude
