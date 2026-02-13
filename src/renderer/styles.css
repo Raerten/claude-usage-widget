@@ -224,7 +224,7 @@ body {
 
 /* ── State containers (loading, login, no-usage, auto-login) ── */
 .state-container {
-    padding: 0 20px;
+    padding: 4px 20px 10px;
     flex: 1;
     display: flex;
     align-items: center;
