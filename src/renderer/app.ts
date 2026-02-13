@@ -10,6 +10,8 @@ let updateInterval: ReturnType<typeof setInterval> | null = null;
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
 let latestUsageData: UsageData | null = null;
 let isCollapsed = false;
+let lastUpdateTime: Date | null = null;
+let lastUpdateInterval: ReturnType<typeof setInterval> | null = null;
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 // Manual window drag (replaces -webkit-app-region: drag so clicks work)
@@ -643,12 +645,30 @@ function updateResetText(textElement: HTMLElement, resetsAt: string | null | und
     textElement.textContent = `Resets ${timeStr} \u00B7 ${resetTimeStr} (${tz})`;
 }
 
-// Update "Updated HH:MM" text
+// Update "Updated X ago" text
 function updateLastUpdated(): void {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    elements.lastUpdate.textContent = `Updated ${h}:${m}`;
+    lastUpdateTime = new Date();
+    refreshLastUpdated();
+    if (lastUpdateInterval) clearInterval(lastUpdateInterval);
+    lastUpdateInterval = setInterval(refreshLastUpdated, 30_000);
+}
+
+function refreshLastUpdated(): void {
+    if (!lastUpdateTime) return;
+    const diff = Date.now() - lastUpdateTime.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    let text: string;
+    if (seconds < 60) {
+        text = 'updated < 1m ago';
+    } else if (minutes < 60) {
+        text = `updated ${minutes}m ago`;
+    } else {
+        text = `updated ${hours}h ${minutes % 60}m ago`;
+    }
+    elements.lastUpdate.textContent = text;
 }
 
 // Resize window to fit content
@@ -741,4 +761,5 @@ init();
 window.addEventListener('beforeunload', () => {
     stopAutoUpdate();
     if (countdownInterval) clearInterval(countdownInterval);
+    if (lastUpdateInterval) clearInterval(lastUpdateInterval);
 });
