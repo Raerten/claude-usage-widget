@@ -9,6 +9,8 @@ const store = require('./src/main/store');
 
 initLogManager();
 
+app.setAppUserModelId('dev.raerten.app.claude-usage-widget');
+
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {

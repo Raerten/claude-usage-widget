@@ -27,7 +27,7 @@
     "electron-store": "^8.2.0"
   },
   "build": {
-    "appId": "dev.raerten.claude-usage-widget",
+    "appId": "dev.raerten.app.claude-usage-widget",
     "productName": "Claude Usage Widget",
     "win": {
       "target": [
