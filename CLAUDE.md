@@ -7,7 +7,8 @@ Desktop widget (Electron) that displays Claude.ai usage statistics. Uses session
 ## Tech Stack
 
 - **Electron 41** (beta) - Desktop framework
-- **Vanilla JS** - No frontend frameworks
+- **TypeScript** (strict mode) - Type-safe code across all processes
+- **Vite 6 + electron-vite 3** - Build tool (separate pipelines for main/preload/renderer)
 - **axios** - HTTP client for API calls
 - **electron-store** - Local credential/config storage (encrypted with per-install random key)
 - **electron-builder** - Packaging (Windows NSIS installer)
@@ -16,32 +17,53 @@ Desktop widget (Electron) that displays Claude.ai usage statistics. Uses session
 ## Project Structure
 
 ```
-main.js                  # App entry: single-instance lock, app lifecycle, tray handler wiring
-preload.js               # IPC bridge (contextBridge), exposes electronAPI to renderer
-preload-logs.js          # IPC bridge for log window, exposes logsAPI
-src/main/
-  constants.js           # URLs, dimensions, polling intervals
-  store.js               # electron-store wrapper (credentials, orgs, window pos, opacity, collapsed state, autostart, API cookies)
-  window.js              # Main BrowserWindow creation, position persistence, opacity
-  logManager.js          # Console interceptor, circular buffer (1000), broadcasts to log window
-  logWindow.js           # Log window factory (singleton, 700x500, frameless, resizable, always-on-top)
-  auth.js                # Login (visible + silent), cookie polling, org fetching
-  api.js                 # Usage API call with session cookie auth
-  ipc.js                 # All ipcMain handlers (credentials, window, orgs, usage, opacity)
-  tray.js                # System tray icon, context menu with org radio buttons + autostart checkbox
-src/renderer/
-  index.html             # Widget HTML (states: loading, login, no-usage, auto-login, main, collapsed)
-  app.js                 # Frontend logic: UI state machine, countdown timers, manual drag, org switcher
-  styles.css             # Dark theme (VS Code-inspired), progress bars, animations
-  logs.html              # Log viewer HTML (titlebar, filter controls, search, log list)
-  logs.js                # Log viewer logic (filtering, search, auto-scroll, real-time append)
-  logs.css               # Log viewer styles (VS Code dark theme, monospace, color-coded levels)
-assets/                  # icon.ico, tray-icon.png
+src/
+  main/
+    index.ts               # App entry: single-instance lock, app lifecycle, tray handler wiring
+    constants.ts            # URLs, dimensions, polling intervals
+    store.ts                # electron-store wrapper (credentials, orgs, window pos, opacity, collapsed state, autostart, API cookies)
+    window.ts               # Main BrowserWindow creation, position persistence, opacity
+    logManager.ts           # Console interceptor, circular buffer (1000), broadcasts to log window
+    logWindow.ts            # Log window factory (singleton, 700x500, frameless, resizable, always-on-top)
+    auth.ts                 # Login (visible + silent), cookie polling, org fetching
+    api.ts                  # Usage API call with session cookie auth
+    ipc.ts                  # All ipcMain handlers (credentials, window, orgs, usage, opacity)
+    tray.ts                 # System tray icon, context menu with org radio buttons + autostart checkbox
+  preload/
+    index.ts                # IPC bridge (contextBridge), exposes electronAPI to renderer
+    logs.ts                 # IPC bridge for log window, exposes logsAPI
+  renderer/
+    index.html              # Widget HTML (states: loading, login, no-usage, auto-login, main, collapsed)
+    app.ts                  # Frontend logic: UI state machine, countdown timers, manual drag, org switcher
+    styles.css              # Dark theme (VS Code-inspired), progress bars, animations
+    logs.html               # Log viewer HTML (titlebar, filter controls, search, log list)
+    logs.ts                 # Log viewer logic (filtering, search, auto-scroll, real-time append)
+    logs.css                # Log viewer styles (VS Code dark theme, monospace, color-coded levels)
+  types/
+    ipc.ts                  # Shared IPC channel type contracts, LogEntry, LoginSuccessData
+    usage.ts                # UsageBucket, UsageData API response types
+    store.ts                # Organization, WindowPosition, Credentials, StoreSchema
+    electron-api.d.ts       # Global window.electronAPI and window.logsAPI declarations
+    tray.ts                 # TrayHandlers interface
+electron.vite.config.ts     # Vite config: main, preload (2 entries), renderer (2 HTML entries)
+electron-builder.yml         # Extracted build config (was in package.json)
+tsconfig.json                # Root project references
+tsconfig.node.json           # Main + preload (ESNext, strict, bundler resolution)
+tsconfig.web.json            # Renderer (ESNext, strict, DOM lib)
+assets/                      # icon.ico, tray-icon.png
+out/                         # Build output (gitignored)
 ```
+
+## Build System (electron-vite)
+
+- **Main process**: Bundled to `out/main/index.js` (CJS). electron-store is bundled (not externalized) because it's ESM-only.
+- **Preload**: 2 separate files at `out/preload/index.js` and `out/preload/logs.js` (CJS, sandboxed).
+- **Renderer**: 2 HTML entries. In dev, served by Vite dev server with HMR. In production, bundled to `out/renderer/`.
+- **Dev server**: `ELECTRON_RENDERER_URL` env var is set automatically by `electron-vite dev`. Window code checks for it to load URL (dev) vs file (prod).
 
 ## How It Works
 
-### Authentication (src/main/auth.js)
+### Authentication (src/main/auth.ts)
 1. Opens BrowserWindow to `https://claude.ai` for user login (800x700)
 2. Polls cookies every 2s (visible) or 1s (silent) for `sessionKey`
 3. On cookie found, fetches orgs from `/api/organizations` with sessionKey header
@@ -55,17 +77,17 @@ assets/                  # icon.ico, tray-icon.png
 - Switching orgs: updates store, refreshes tray menu, sends `org-switched` IPC to renderer
 - Renderer stops auto-update, clears cached data, re-fetches for new org, restarts timer
 
-### Usage Data (src/main/api.js)
+### Usage Data (src/main/api.ts)
 - Endpoint: `https://claude.ai/api/organizations/{orgId}/usage`
 - Auth: `Cookie: sessionKey={key}` + stored server cookies (e.g. `cf_clearance`) + custom User-Agent
 - Server `set-cookie` headers are captured from all responses (incl. errors) and persisted via electron-store
-- Cookie helpers (`buildCookieHeader`, `storeResponseCookies`) shared between `api.js` and `auth.js`
+- Cookie helpers (`buildCookieHeader`, `storeResponseCookies`) shared between `api.ts` and `auth.ts`
 - All stored API cookies are cleared on logout via `deleteCredentials()`
 - Response fields used: `five_hour`, `seven_day`, `seven_day_sonnet` (each has `utilization` + `resets_at`)
 - `seven_day_sonnet` row shown only when data exists (utilization > 0 or resets_at present)
 - Auto-refreshes every 5 minutes; auto re-fetches 3s after a reset timer expires
 
-### Window (src/main/window.js)
+### Window (src/main/window.ts)
 - 340px wide, frameless, no shadow, always-on-top ("floating" level), visible on all workspaces
 - **Not transparent** (`transparent: false`); background is `#252526`
 - Skips taskbar (`skipTaskbar: true`)
@@ -75,7 +97,7 @@ assets/                  # icon.ico, tray-icon.png
 - Window opacity controlled via slider (30-100%), saved to store, applied via `setOpacity()`
 - Single instance enforced via `requestSingleInstanceLock()`
 
-### UI States (src/renderer/app.js)
+### UI States (src/renderer/app.ts)
 Six mutually exclusive states managed by show* functions:
 1. **Loading** - spinner on initial load
 2. **Login Required** - login icon + button
@@ -84,16 +106,16 @@ Six mutually exclusive states managed by show* functions:
 5. **Main Content** - session/weekly/sonnet progress bars with reset countdowns
 6. **Collapsed** - single-line bar showing session % + reset time (click header/bar to toggle)
 
-### Log Monitoring (src/main/logManager.js + logWindow.js)
+### Log Monitoring (src/main/logManager.ts + logWindow.ts)
 - `initLogManager()` wraps console.log/warn/error in main process; original output preserved
 - Circular buffer (1000 entries): `{ id, timestamp, level, message }`
 - Broadcasts new entries to log window via `webContents.send('new-log-entry', entry)`
 - Log window: singleton, 700x500, frameless, resizable, always-on-top, position persisted
-- Separate preload (`preload-logs.js`) exposes `logsAPI` (not mixed into main `electronAPI`)
+- Separate preload (`src/preload/logs.ts`) exposes `logsAPI` (not mixed into main `electronAPI`)
 - Access: widget top-bar log button + tray "Show Logs" menu item
 - In-memory only; cleared on app restart
 
-### Autostart (main.js + tray.js)
+### Autostart (src/main/index.ts + tray.ts)
 - Tray checkbox "Launch on Startup" toggles `app.setLoginItemSettings({ openAtLogin })` (Windows Registry)
 - Stored as `autostart` (boolean, default false) via electron-store
 - Applied on app ready; toggled via tray menu `onToggleAutostart` handler
@@ -110,12 +132,23 @@ Six mutually exclusive states managed by show* functions:
 
 ```bash
 yarn install             # Install dependencies
-yarn start               # Run app (opens DevTools in dev mode)
-yarn dev                 # Run with NODE_ENV=development (cross-env)
-yarn build:win           # Build Windows installer to dist/
+yarn dev                 # Run with Vite dev server + HMR (opens DevTools)
+yarn start               # Preview production build
+yarn build               # Build all targets to out/
+yarn build:win           # Build + package Windows installer to dist/
+yarn typecheck           # Run TypeScript type checking (both node + web)
+yarn typecheck:node      # Typecheck main process + preload only
+yarn typecheck:web       # Typecheck renderer only
 ```
 
 ## Key Implementation Details
+
+### Type System
+- **Shared types** in `src/types/` are imported by both main process and renderer
+- **IPC contracts** (`src/types/ipc.ts`): typed channel maps for invoke, send, and main-to-renderer
+- **Store schema** (`src/types/store.ts`): `StoreSchema` generic parameter on `electron-store`
+- **Global declarations** (`src/types/electron-api.d.ts`): `window.electronAPI` and `window.logsAPI`
+- All source files use ESM (`import`/`export`); Vite bundles main/preload to CJS for Electron
 
 ### IPC Channels
 **invoke (request/response):**
@@ -151,10 +184,10 @@ yarn build:win           # Build Windows installer to dist/
 
 - `index.html` default visibility: `loadingContainer` is visible, all others have `display: none`. Any new UI state function must explicitly hide it.
 - `showCollapsed()` is the canonical way to enter collapsed mode (hides all state containers); `toggleCollapse()` and init/login-success both use it
-- `auth.js` imports from `api.js` (cookie helpers); reverse import would create circular dependency
-- Quick module syntax check: `node -e "require('./src/main/store'); require('./src/main/api');"` (works for non-Electron modules)
-- Adding a secondary window: create `src/main/<name>Window.js` (singleton pattern), separate `preload-<name>.js`, renderer files in `src/renderer/`, wire IPC in `ipc.js`, add tray handler in `tray.js` + `main.js`
-- New tray handlers require adding to both `buildContextMenu()` in `tray.js` AND the handler object in `main.js`'s `createTray()` call
+- `auth.ts` imports from `api.ts` (cookie helpers); reverse import would create circular dependency
+- Adding a secondary window: create `src/main/<name>Window.ts` (singleton pattern), separate `src/preload/<name>.ts`, renderer files in `src/renderer/`, add entry to `electron.vite.config.ts` preload + renderer inputs, wire IPC in `ipc.ts`, add tray handler in `tray.ts` + `index.ts`
+- New tray handlers require adding to both `buildContextMenu()` in `tray.ts` AND the handler object in `index.ts`'s `createTray()` call, AND the `TrayHandlers` interface in `src/types/tray.ts`
+- Path resolution: `__dirname` in bundled main = `out/main/`, so preload is `../preload/index.js`; assets use `app.getAppPath()` which works in both dev and packaged
 
 ## Build Output
 

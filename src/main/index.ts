@@ -1,11 +1,11 @@
-const { app } = require('electron');
-const { initLogManager } = require('./src/main/logManager');
-const { createMainWindow, getMainWindow } = require('./src/main/window');
-const { createTray, refreshTrayMenu } = require('./src/main/tray');
-const { createLoginWindow } = require('./src/main/auth');
-const { createLogWindow } = require('./src/main/logWindow');
-const { registerIpcHandlers } = require('./src/main/ipc');
-const store = require('./src/main/store');
+import { app } from 'electron';
+import { initLogManager } from './logManager';
+import { createMainWindow, getMainWindow } from './window';
+import { createTray, refreshTrayMenu } from './tray';
+import { createLoginWindow } from './auth';
+import { createLogWindow } from './logWindow';
+import { registerIpcHandlers } from './ipc';
+import * as store from './store';
 
 initLogManager();
 
@@ -28,7 +28,7 @@ if (!gotTheLock) {
 registerIpcHandlers();
 
 // Refresh tray menu when orgs or selected org change
-function handleOrgSwitch(orgId) {
+function handleOrgSwitch(orgId: string): void {
   store.setSelectedOrganizationId(orgId);
   refreshTrayMenu();
   const mainWindow = getMainWindow();
@@ -78,7 +78,6 @@ app.whenReady().then(() => {
       app.setLoginItemSettings({ openAtLogin: enabled });
     },
   });
-
 });
 
 app.on('window-all-closed', () => {

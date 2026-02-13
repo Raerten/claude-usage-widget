@@ -1,12 +1,13 @@
-const axios = require('axios');
-const { USAGE_API_TEMPLATE, USER_AGENT } = require('./constants');
-const store = require('./store');
-const { getMainWindow } = require('./window');
+import axios, { AxiosResponse } from 'axios';
+import { USAGE_API_TEMPLATE, USER_AGENT } from './constants';
+import * as store from './store';
+import { getMainWindow } from './window';
+import type { UsageData } from '../types/usage';
 
 const API_RETRIES = 5;
 const API_RETRY_DELAY_MS = 3000;
 
-function buildCookieHeader(sessionKey) {
+export function buildCookieHeader(sessionKey: string): string {
   const extra = store.getApiCookies();
   const parts = [`sessionKey=${sessionKey}`];
   for (const [name, value] of Object.entries(extra)) {
@@ -17,7 +18,7 @@ function buildCookieHeader(sessionKey) {
   return parts.join('; ');
 }
 
-function storeResponseCookies(response) {
+export function storeResponseCookies(response: AxiosResponse): void {
   const setCookieHeaders = response.headers['set-cookie'];
   if (!setCookieHeaders) return;
 
@@ -35,14 +36,14 @@ function storeResponseCookies(response) {
   console.log('[Main] Stored API cookies:', Object.keys(saved).join(', '));
 }
 
-function sendRetryProgress(attempt, maxAttempts) {
+function sendRetryProgress(attempt: number, maxAttempts: number): void {
   const mainWindow = getMainWindow();
   if (mainWindow) {
     mainWindow.webContents.send('fetch-retry', { attempt, maxAttempts });
   }
 }
 
-async function fetchUsageData() {
+export async function fetchUsageData(): Promise<UsageData> {
   const organizationId = store.getOrganizationId();
   const initialSessionKey = store.getSessionKey();
 
@@ -57,15 +58,14 @@ async function fetchUsageData() {
 
   const url = USAGE_API_TEMPLATE.replace('{orgId}', organizationId);
 
-  let lastError;
+  let lastError: Error | undefined;
   for (let attempt = 1; attempt <= API_RETRIES; attempt++) {
-    // Re-read session key each attempt (may have been refreshed by silent login)
     const sessionKey = store.getSessionKey();
     if (!sessionKey) throw new Error('SessionExpired');
 
     console.log(`[Main] API request to: ${url} (attempt ${attempt}/${API_RETRIES})`);
     try {
-      const response = await axios.get(url, {
+      const response: AxiosResponse<UsageData> = await axios.get(url, {
         headers: {
           'Cookie': buildCookieHeader(sessionKey),
           'User-Agent': USER_AGENT,
@@ -74,13 +74,13 @@ async function fetchUsageData() {
       storeResponseCookies(response);
       console.log('[Main] API request successful, status:', response.status);
       return response.data;
-    } catch (error) {
-      lastError = error;
-      const status = error.response?.status;
-      console.error(`[Main] API request failed (attempt ${attempt}/${API_RETRIES}):`, error.message);
+    } catch (error: unknown) {
+      const axiosError = error as { response?: AxiosResponse; message: string };
+      lastError = error as Error;
+      const status = axiosError.response?.status;
+      console.error(`[Main] API request failed (attempt ${attempt}/${API_RETRIES}):`, axiosError.message);
 
-      // Still capture cookies from error responses (e.g. cf_clearance on 403)
-      if (error.response) storeResponseCookies(error.response);
+      if (axiosError.response) storeResponseCookies(axiosError.response);
 
       if (status === 401) {
         throw new Error('SessionExpired');
@@ -101,5 +101,3 @@ async function fetchUsageData() {
   }
   throw lastError;
 }
-
-module.exports = { fetchUsageData, buildCookieHeader, storeResponseCookies };

@@ -1,8 +1,8 @@
-const { contextBridge, ipcRenderer } = require('electron');
+import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('logsAPI', {
-  onNewLog: (callback) => {
-    ipcRenderer.on('new-log-entry', (event, logEntry) => callback(logEntry));
+  onNewLog: (callback: (logEntry: unknown) => void) => {
+    ipcRenderer.on('new-log-entry', (_event, logEntry) => callback(logEntry));
   },
   getBufferedLogs: () => ipcRenderer.invoke('get-buffered-logs'),
   clearLogs: () => ipcRenderer.invoke('clear-logs'),

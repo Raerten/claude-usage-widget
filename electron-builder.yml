@@ -1,0 +1,21 @@
+appId: dev.raerten.app.claude-usage-widget
+productName: Claude Usage Widget
+directories:
+  output: dist
+files:
+  - out/**/*
+  - assets/**/*
+  - "!**/*.ts"
+  - "!**/*.md"
+  - "!src/**/*"
+  - "!electron.vite.config.*"
+  - "!tsconfig*.json"
+win:
+  target:
+    - nsis
+  icon: assets/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true

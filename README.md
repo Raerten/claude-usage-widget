@@ -34,7 +34,7 @@ A standalone Windows desktop widget that displays your Claude.ai usage statistic
 git clone https://github.com/raerten/claude-usage-widget.git
 cd claude-usage-widget
 yarn install
-yarn start
+yarn dev
 ```
 
 Build Windows installer:
@@ -80,7 +80,7 @@ Left-click toggles widget visibility.
 
 ## Tech Stack
 
-- Electron 41 (beta), Vanilla JS, axios, electron-store, electron-builder
+- Electron 41 (beta), TypeScript (strict), Vite + electron-vite, axios, electron-store, electron-builder
 - Package manager: Yarn 4.12.0
 
 ## License

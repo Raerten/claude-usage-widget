@@ -1,23 +1,26 @@
-const { Tray, Menu, app } = require('electron');
-const path = require('path');
-const store = require('./store');
+import { Tray, Menu, app, MenuItemConstructorOptions } from 'electron';
+import { join } from 'path';
+import * as store from './store';
+import type { TrayHandlers } from '../types/tray';
 
-let tray = null;
-let handlers = null;
+let tray: Tray | null = null;
+let handlers: TrayHandlers | null = null;
 
-function buildContextMenu() {
+function buildContextMenu(): Electron.Menu {
+  if (!handlers) throw new Error('Tray handlers not initialized');
+
   const orgs = store.getOrganizations();
   const selectedOrgId = store.getOrganizationId();
 
-  const orgMenuItems = orgs.length > 1
+  const orgMenuItems: MenuItemConstructorOptions[] = orgs.length > 1
     ? [
-        { type: 'separator' },
+        { type: 'separator' as const },
         { label: 'Organizations', enabled: false },
         ...orgs.map(org => ({
           label: org.name,
-          type: 'radio',
+          type: 'radio' as const,
           checked: org.id === selectedOrgId,
-          click: () => handlers.onSwitchOrg(org.id),
+          click: () => handlers!.onSwitchOrg(org.id),
         })),
       ]
     : [];
@@ -26,7 +29,7 @@ function buildContextMenu() {
     { label: 'Show Widget', click: handlers.onShow },
     { label: 'Refresh', click: handlers.onRefresh },
     { label: 'Show Logs', click: handlers.onShowLogs },
-    { label: 'Launch on Startup', type: 'checkbox', checked: store.getAutostart(), click: (menuItem) => handlers.onToggleAutostart(menuItem.checked) },
+    { label: 'Launch on Startup', type: 'checkbox', checked: store.getAutostart(), click: (menuItem) => handlers!.onToggleAutostart(menuItem.checked) },
     ...orgMenuItems,
     { type: 'separator' },
     { label: 'Re-login', click: handlers.onReLogin },
@@ -36,11 +39,11 @@ function buildContextMenu() {
   ]);
 }
 
-function createTray(h) {
+export function createTray(h: TrayHandlers): void {
   handlers = h;
 
   try {
-    tray = new Tray(path.join(__dirname, '../../assets/tray-icon.png'));
+    tray = new Tray(join(app.getAppPath(), 'assets', 'tray-icon.png'));
     tray.setToolTip('Claude Usage Widget');
     tray.setContextMenu(buildContextMenu());
     tray.on('click', handlers.onToggle);
@@ -49,10 +52,8 @@ function createTray(h) {
   }
 }
 
-function refreshTrayMenu() {
+export function refreshTrayMenu(): void {
   if (tray) {
     tray.setContextMenu(buildContextMenu());
   }
 }
-
-module.exports = { createTray, refreshTrayMenu };

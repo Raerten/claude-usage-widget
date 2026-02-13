@@ -1,7 +1,6 @@
-const { BrowserWindow, session } = require('electron');
-const path = require('path');
-const axios = require('axios');
-const {
+import { BrowserWindow, session } from 'electron';
+import axios from 'axios';
+import {
   CLAUDE_BASE_URL,
   ORGANIZATIONS_API,
   USER_AGENT,
@@ -10,19 +9,32 @@ const {
   VISIBLE_LOGIN_POLL_MS,
   SILENT_LOGIN_POLL_MS,
   SILENT_LOGIN_TIMEOUT_MS,
-} = require('./constants');
-const store = require('./store');
-const { getMainWindow } = require('./window');
-const { refreshTrayMenu } = require('./tray');
-const { buildCookieHeader, storeResponseCookies } = require('./api');
+} from './constants';
+import * as store from './store';
+import { getMainWindow } from './window';
+import { refreshTrayMenu } from './tray';
+import { buildCookieHeader, storeResponseCookies } from './api';
+import type { Organization } from '../types/store';
 
-let loginWindow = null;
-let silentLoginWindow = null;
+let loginWindow: BrowserWindow | null = null;
+let silentLoginWindow: BrowserWindow | null = null;
 let silentLoginInProgress = false;
 
-// --- Shared login helpers ---
+interface LoginState {
+  hasLoggedIn: boolean;
+}
 
-async function checkLoginStatus(state, opts) {
+interface LoginOpts {
+  getWindow: () => BrowserWindow | null;
+  logPrefix: string;
+  onSuccess: () => void;
+}
+
+interface Poller {
+  clear: () => void;
+}
+
+async function checkLoginStatus(state: LoginState, opts: LoginOpts): Promise<void> {
   if (state.hasLoggedIn || !opts.getWindow()) return;
 
   try {
@@ -36,7 +48,7 @@ async function checkLoginStatus(state, opts) {
     const sessionKey = cookies[0].value;
     console.log(`${opts.logPrefix}Session key found, attempting to get orgs...`);
 
-    let organizations = null;
+    let organizations: Organization[] | null = null;
     try {
       const response = await axios.get(ORGANIZATIONS_API, {
         headers: {
@@ -47,24 +59,23 @@ async function checkLoginStatus(state, opts) {
       storeResponseCookies(response);
 
       if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-        organizations = response.data.map(org => ({
-          id: org.uuid || org.id,
+        organizations = response.data.map((org: { uuid?: string; id?: string; name?: string }) => ({
+          id: org.uuid || org.id || '',
           name: org.name || 'Unnamed',
         }));
-        console.log(`${opts.logPrefix}Organizations found:`, organizations.length,
-          organizations.map((o, i) => `[${i}] ${o.name}: ${o.id}`).join(', '));
+        console.log(`${opts.logPrefix}Organizations found:`, organizations!.length,
+          organizations!.map((o, i) => `[${i}] ${o.name}: ${o.id}`).join(', '));
       }
-    } catch (err) {
-      console.log(`${opts.logPrefix}API not ready yet:`, err.message);
+    } catch (err: unknown) {
+      console.log(`${opts.logPrefix}API not ready yet:`, (err as Error).message);
     }
 
     if (sessionKey && organizations && organizations.length > 0) {
       state.hasLoggedIn = true;
 
-      // Keep existing selection if it's still valid, otherwise pick first
       const currentSelectedId = store.getOrganizationId();
       const selectedOrgId = organizations.some(o => o.id === currentSelectedId)
-        ? currentSelectedId
+        ? currentSelectedId!
         : organizations[0].id;
 
       console.log(`${opts.logPrefix}Login successful! Selected org: ${selectedOrgId}`);
@@ -87,7 +98,7 @@ async function checkLoginStatus(state, opts) {
   }
 }
 
-function createLoginPoller(state, opts, intervalMs) {
+function createLoginPoller(state: LoginState, opts: LoginOpts, intervalMs: number): Poller {
   const id = setInterval(async () => {
     if (!state.hasLoggedIn && opts.getWindow()) {
       await checkLoginStatus(state, opts);
@@ -99,7 +110,7 @@ function createLoginPoller(state, opts, intervalMs) {
   return { clear: () => clearInterval(id) };
 }
 
-function attachNavigationListeners(browserWindow, state, opts) {
+function attachNavigationListeners(browserWindow: BrowserWindow, state: LoginState, opts: LoginOpts): void {
   browserWindow.webContents.on('did-finish-load', async () => {
     const url = browserWindow.webContents.getURL();
     console.log(`${opts.logPrefix}Page loaded:`, url);
@@ -108,7 +119,7 @@ function attachNavigationListeners(browserWindow, state, opts) {
     }
   });
 
-  browserWindow.webContents.on('did-navigate', async (event, url) => {
+  browserWindow.webContents.on('did-navigate', async (_event, url) => {
     console.log(`${opts.logPrefix}Navigated to:`, url);
     if (url.includes('claude.ai')) {
       await checkLoginStatus(state, opts);
@@ -116,13 +127,11 @@ function attachNavigationListeners(browserWindow, state, opts) {
   });
 }
 
-// --- Login window (visible) ---
-
-function createLoginWindow() {
+export function createLoginWindow(): void {
   loginWindow = new BrowserWindow({
     width: LOGIN_WINDOW_WIDTH,
     height: LOGIN_WINDOW_HEIGHT,
-    parent: getMainWindow(),
+    parent: getMainWindow() || undefined,
     modal: true,
     webPreferences: {
       nodeIntegration: false,
@@ -132,8 +141,8 @@ function createLoginWindow() {
 
   loginWindow.loadURL(CLAUDE_BASE_URL);
 
-  const state = { hasLoggedIn: false };
-  const opts = {
+  const state: LoginState = { hasLoggedIn: false };
+  const opts: LoginOpts = {
     getWindow: () => loginWindow,
     logPrefix: '',
     onSuccess: () => {
@@ -151,9 +160,7 @@ function createLoginWindow() {
   });
 }
 
-// --- Silent login (hidden window) ---
-
-async function attemptSilentLogin() {
+export async function attemptSilentLogin(): Promise<boolean> {
   if (silentLoginInProgress) {
     console.log('[Main] Silent login already in progress, skipping...');
     return false;
@@ -180,8 +187,8 @@ async function attemptSilentLogin() {
 
     silentLoginWindow.loadURL(CLAUDE_BASE_URL);
 
-    const state = { hasLoggedIn: false };
-    const opts = {
+    const state: LoginState = { hasLoggedIn: false };
+    const opts: LoginOpts = {
       getWindow: () => silentLoginWindow,
       logPrefix: '[Main] Silent login: ',
       onSuccess: () => {
@@ -217,5 +224,3 @@ async function attemptSilentLogin() {
     });
   });
 }
-
-module.exports = { createLoginWindow, attemptSilentLogin };

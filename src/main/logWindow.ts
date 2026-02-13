@@ -1,19 +1,19 @@
-const { BrowserWindow } = require('electron');
-const path = require('path');
-const { LOG_WINDOW_WIDTH, LOG_WINDOW_HEIGHT } = require('./constants');
-const store = require('./store');
-const { setLogWindow, removeLogWindow } = require('./logManager');
+import { BrowserWindow, app } from 'electron';
+import { join } from 'path';
+import { LOG_WINDOW_WIDTH, LOG_WINDOW_HEIGHT } from './constants';
+import * as store from './store';
+import { setLogWindow, removeLogWindow } from './logManager';
 
-let logWindow = null;
+let logWindow: BrowserWindow | null = null;
 
-function createLogWindow() {
+export function createLogWindow(): void {
   if (logWindow && !logWindow.isDestroyed()) {
     logWindow.focus();
     return;
   }
 
   const savedPosition = store.getLogWindowPosition();
-  const windowOptions = {
+  const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: LOG_WINDOW_WIDTH,
     height: LOG_WINDOW_HEIGHT,
     minWidth: 400,
@@ -24,11 +24,11 @@ function createLogWindow() {
     alwaysOnTop: true,
     resizable: true,
     skipTaskbar: false,
-    icon: path.join(__dirname, '../../assets/icon.ico'),
+    icon: join(app.getAppPath(), 'assets', 'icon.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, '../../preload-logs.js'),
+      preload: join(__dirname, '../preload/logs.js'),
     },
   };
 
@@ -38,7 +38,13 @@ function createLogWindow() {
   }
 
   logWindow = new BrowserWindow(windowOptions);
-  logWindow.loadFile(path.join(__dirname, '../renderer/logs.html'));
+
+  if (process.env.ELECTRON_RENDERER_URL) {
+    logWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}/logs.html`);
+  } else {
+    logWindow.loadFile(join(__dirname, '../renderer/logs.html'));
+  }
+
   logWindow.setAlwaysOnTop(true, 'floating');
 
   setLogWindow(logWindow.webContents);
@@ -60,8 +66,6 @@ function createLogWindow() {
   }
 }
 
-function getLogWindow() {
+export function getLogWindow(): BrowserWindow | null {
   return logWindow;
 }
-
-module.exports = { createLogWindow, getLogWindow };

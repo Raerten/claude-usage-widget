@@ -1,31 +1,34 @@
-let allLogs = [];
-let filteredLogs = [];
+import type { LogEntry } from '../types/ipc';
+import '../types/electron-api.d.ts';
+
+let allLogs: LogEntry[] = [];
+let filteredLogs: LogEntry[] = [];
 let currentFilter = 'all';
 let searchQuery = '';
 let autoScroll = true;
 
 const elements = {
-  logList: document.getElementById('logList'),
-  logCount: document.getElementById('logCount'),
-  filterAll: document.getElementById('filterAll'),
-  filterInfo: document.getElementById('filterInfo'),
-  filterWarn: document.getElementById('filterWarn'),
-  filterError: document.getElementById('filterError'),
-  searchInput: document.getElementById('searchInput'),
-  autoScrollBtn: document.getElementById('autoScrollBtn'),
-  clearBtn: document.getElementById('clearBtn'),
-  closeBtn: document.getElementById('closeBtn'),
+  logList: document.getElementById('logList') as HTMLDivElement,
+  logCount: document.getElementById('logCount') as HTMLSpanElement,
+  filterAll: document.getElementById('filterAll') as HTMLButtonElement,
+  filterInfo: document.getElementById('filterInfo') as HTMLButtonElement,
+  filterWarn: document.getElementById('filterWarn') as HTMLButtonElement,
+  filterError: document.getElementById('filterError') as HTMLButtonElement,
+  searchInput: document.getElementById('searchInput') as HTMLInputElement,
+  autoScrollBtn: document.getElementById('autoScrollBtn') as HTMLButtonElement,
+  clearBtn: document.getElementById('clearBtn') as HTMLButtonElement,
+  closeBtn: document.getElementById('closeBtn') as HTMLButtonElement,
 };
 
 const filterButtons = [elements.filterAll, elements.filterInfo, elements.filterWarn, elements.filterError];
 
-function escapeHtml(text) {
+function escapeHtml(text: string): string {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 
-function formatTimestamp(iso) {
+function formatTimestamp(iso: string): string {
   const d = new Date(iso);
   const h = String(d.getHours()).padStart(2, '0');
   const m = String(d.getMinutes()).padStart(2, '0');
@@ -33,7 +36,7 @@ function formatTimestamp(iso) {
   return `${h}:${m}:${s}`;
 }
 
-function applyFilters() {
+function applyFilters(): void {
   const query = searchQuery.toLowerCase();
   filteredLogs = allLogs.filter(log => {
     if (currentFilter !== 'all' && log.level !== currentFilter) return false;
@@ -42,7 +45,7 @@ function applyFilters() {
   });
 }
 
-function createLogElement(log) {
+function createLogElement(log: LogEntry): HTMLDivElement {
   const div = document.createElement('div');
   div.className = `log-entry ${log.level}`;
   div.innerHTML =
@@ -52,7 +55,7 @@ function createLogElement(log) {
   return div;
 }
 
-function renderLogs() {
+function renderLogs(): void {
   const count = filteredLogs.length;
   elements.logCount.textContent = `${count} ${count === 1 ? 'entry' : 'entries'}`;
 
@@ -77,7 +80,7 @@ function renderLogs() {
   }
 }
 
-function appendLog(log) {
+function appendLog(log: LogEntry): void {
   const query = searchQuery.toLowerCase();
   const matchesFilter = currentFilter === 'all' || log.level === currentFilter;
   const matchesSearch = !query || log.message.toLowerCase().includes(query);
@@ -98,14 +101,15 @@ function appendLog(log) {
   }
 }
 
-async function init() {
-  allLogs = await window.logsAPI.getBufferedLogs();
+async function init(): Promise<void> {
+  allLogs = await window.logsAPI.getBufferedLogs() as LogEntry[];
   applyFilters();
   renderLogs();
 
   window.logsAPI.onNewLog((logEntry) => {
-    allLogs.push(logEntry);
-    appendLog(logEntry);
+    const entry = logEntry as LogEntry;
+    allLogs.push(entry);
+    appendLog(entry);
   });
 
   // Filter buttons
@@ -113,18 +117,18 @@ async function init() {
     btn.addEventListener('click', () => {
       filterButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      currentFilter = btn.dataset.level;
+      currentFilter = (btn as HTMLElement).dataset.level || 'all';
       applyFilters();
       renderLogs();
     });
   });
 
   // Search
-  let searchTimeout;
-  elements.searchInput.addEventListener('input', (e) => {
+  let searchTimeout: ReturnType<typeof setTimeout>;
+  elements.searchInput.addEventListener('input', (e: Event) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-      searchQuery = e.target.value.trim();
+      searchQuery = (e.target as HTMLInputElement).value.trim();
       applyFilters();
       renderLogs();
     }, 300);

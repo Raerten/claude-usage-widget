@@ -1,17 +1,17 @@
-const { ipcMain, session, shell, app } = require('electron');
-const store = require('./store');
-const { WIDGET_WIDTH } = require('./constants');
-const { fetchUsageData } = require('./api');
-const { getMainWindow } = require('./window');
-const { createLoginWindow, attemptSilentLogin } = require('./auth');
-const { refreshTrayMenu } = require('./tray');
-const { getBufferedLogs, clearLogs } = require('./logManager');
-const { createLogWindow, getLogWindow } = require('./logWindow');
+import { ipcMain, session, shell, app } from 'electron';
+import * as store from './store';
+import { WIDGET_WIDTH } from './constants';
+import { fetchUsageData } from './api';
+import { getMainWindow } from './window';
+import { createLoginWindow, attemptSilentLogin } from './auth';
+import { refreshTrayMenu } from './tray';
+import { getBufferedLogs, clearLogs } from './logManager';
+import { createLogWindow, getLogWindow } from './logWindow';
 
-function registerIpcHandlers() {
+export function registerIpcHandlers(): void {
   ipcMain.handle('get-credentials', () => store.getCredentials());
 
-  ipcMain.handle('save-credentials', (event, { sessionKey, organizationId }) => {
+  ipcMain.handle('save-credentials', (_event, { sessionKey, organizationId }: { sessionKey: string; organizationId: string }) => {
     store.saveCredentials(sessionKey, null, organizationId);
     return true;
   });
@@ -42,7 +42,7 @@ function registerIpcHandlers() {
     return mainWindow ? mainWindow.getBounds() : null;
   });
 
-  ipcMain.handle('set-window-position', (event, { x, y }) => {
+  ipcMain.handle('set-window-position', (_event, { x, y }: { x: number; y: number }) => {
     const mainWindow = getMainWindow();
     if (mainWindow) {
       mainWindow.setPosition(x, y);
@@ -51,9 +51,9 @@ function registerIpcHandlers() {
     return false;
   });
 
-  ipcMain.on('open-external', (event, url) => shell.openExternal(url));
+  ipcMain.on('open-external', (_event, url: string) => shell.openExternal(url));
 
-  ipcMain.on('resize-to-content', (event, height) => {
+  ipcMain.on('resize-to-content', (_event, height: number) => {
     const mainWindow = getMainWindow();
     if (mainWindow) {
       const h = Math.max(Math.round(height), 20);
@@ -66,30 +66,28 @@ function registerIpcHandlers() {
   });
 
   ipcMain.handle('get-collapsed', () => store.getCollapsed());
-  ipcMain.handle('save-collapsed', (event, value) => {
+  ipcMain.handle('save-collapsed', (_event, value: boolean) => {
     store.saveCollapsed(value);
     return true;
   });
 
   ipcMain.handle('get-opacity', () => store.getOpacity());
-  ipcMain.handle('save-opacity', (event, value) => {
+  ipcMain.handle('save-opacity', (_event, value: number) => {
     store.saveOpacity(value);
     const mainWindow = getMainWindow();
     if (mainWindow) mainWindow.setOpacity(value / 100);
     return true;
   });
 
-  // Autostart
   ipcMain.handle('get-autostart', () => store.getAutostart());
-  ipcMain.handle('save-autostart', (event, value) => {
+  ipcMain.handle('save-autostart', (_event, value: boolean) => {
     store.saveAutostart(value);
     app.setLoginItemSettings({ openAtLogin: !!value });
     return true;
   });
 
-  // Organizations
   ipcMain.handle('get-organizations', () => store.getOrganizations());
-  ipcMain.handle('set-selected-org', (event, orgId) => {
+  ipcMain.handle('set-selected-org', (_event, orgId: string) => {
     store.setSelectedOrganizationId(orgId);
     refreshTrayMenu();
     return true;
@@ -105,7 +103,6 @@ function registerIpcHandlers() {
     attemptSilentLogin();
   });
 
-  // Log window
   ipcMain.on('open-log-window', () => {
     createLogWindow();
   });
@@ -124,5 +121,3 @@ function registerIpcHandlers() {
     return true;
   });
 }
-
-module.exports = { registerIpcHandlers };

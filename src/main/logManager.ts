@@ -1,11 +1,15 @@
+import type { WebContents } from 'electron';
+import type { LogEntry } from '../types/ipc';
+
 const MAX_BUFFER_SIZE = 1000;
 
-let logBuffer = [];
+let logBuffer: LogEntry[] = [];
 let logCounter = 0;
-let logWindowWebContents = null;
-const originalConsole = {};
+let logWindowWebContents: WebContents | null = null;
 
-function formatArgs(args) {
+const originalConsole: Record<string, (...args: unknown[]) => void> = {};
+
+function formatArgs(args: unknown[]): string {
   return args.map(arg => {
     if (typeof arg === 'string') return arg;
     try {
@@ -16,8 +20,8 @@ function formatArgs(args) {
   }).join(' ');
 }
 
-function addLogEntry(level, args) {
-  const entry = {
+function addLogEntry(level: LogEntry['level'], args: unknown[]): void {
+  const entry: LogEntry = {
     id: logCounter++,
     timestamp: new Date().toISOString(),
     level,
@@ -38,41 +42,39 @@ function addLogEntry(level, args) {
   }
 }
 
-function initLogManager() {
+export function initLogManager(): void {
   originalConsole.log = console.log;
   originalConsole.warn = console.warn;
   originalConsole.error = console.error;
 
-  console.log = (...args) => {
+  console.log = (...args: unknown[]) => {
     originalConsole.log(...args);
     addLogEntry('info', args);
   };
 
-  console.warn = (...args) => {
+  console.warn = (...args: unknown[]) => {
     originalConsole.warn(...args);
     addLogEntry('warn', args);
   };
 
-  console.error = (...args) => {
+  console.error = (...args: unknown[]) => {
     originalConsole.error(...args);
     addLogEntry('error', args);
   };
 }
 
-function getBufferedLogs() {
+export function getBufferedLogs(): LogEntry[] {
   return [...logBuffer];
 }
 
-function clearLogs() {
+export function clearLogs(): void {
   logBuffer = [];
 }
 
-function setLogWindow(webContents) {
+export function setLogWindow(webContents: WebContents): void {
   logWindowWebContents = webContents;
 }
 
-function removeLogWindow() {
+export function removeLogWindow(): void {
   logWindowWebContents = null;
 }
-
-module.exports = { initLogManager, getBufferedLogs, clearLogs, setLogWindow, removeLogWindow };
