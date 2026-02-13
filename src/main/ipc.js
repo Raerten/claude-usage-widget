@@ -54,7 +54,12 @@ function registerIpcHandlers() {
   ipcMain.on('resize-to-content', (event, height) => {
     const mainWindow = getMainWindow();
     if (mainWindow) {
-      mainWindow.setSize(WIDGET_WIDTH, Math.round(height));
+      const h = Math.max(Math.round(height), 20);
+      const bounds = mainWindow.getBounds();
+      mainWindow.setResizable(true);
+      mainWindow.setMinimumSize(0, 0);
+      mainWindow.setBounds({ x: bounds.x, y: bounds.y, width: WIDGET_WIDTH, height: h });
+      mainWindow.setResizable(false);
     }
   });
 

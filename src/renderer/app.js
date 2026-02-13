@@ -265,22 +265,26 @@ async function switchOrg(orgId) {
 }
 
 // Collapse/expand
+const COLLAPSED_HEIGHT = 39;
+
 function toggleCollapse() {
     isCollapsed = !isCollapsed;
-    const topControls = elements.widgetContainer.querySelector('.top-controls');
+    const dragHandle = document.getElementById('dragHandle');
     if (isCollapsed) {
+        dragHandle.style.display = 'none';
         elements.mainContent.style.display = 'none';
         elements.collapsedBar.style.display = 'flex';
-        elements.orgSwitcher.style.display = 'none';
-        topControls.style.display = 'none';
+        elements.widgetContainer.style.border = 'none';
         updateCollapsedBar();
+        window.electronAPI.resizeToContent(COLLAPSED_HEIGHT);
     } else {
+        dragHandle.style.display = '';
         elements.collapsedBar.style.display = 'none';
         elements.mainContent.style.display = 'flex';
-        topControls.style.display = '';
+        elements.widgetContainer.style.border = '';
         renderOrgSwitcher();
+        fitWindow();
     }
-    fitWindow();
 }
 
 function updateCollapsedBar() {
@@ -540,10 +544,13 @@ function updateLastUpdated() {
 
 // Resize window to fit content
 function fitWindow() {
+    // Double rAF ensures DOM reflow is fully complete before measuring
     requestAnimationFrame(() => {
-        const container = document.getElementById('widgetContainer');
-        const height = container.scrollHeight + 2; // +2 for border
-        window.electronAPI.resizeToContent(height);
+        requestAnimationFrame(() => {
+            const container = document.getElementById('widgetContainer');
+            const height = container.getBoundingClientRect().height;
+            window.electronAPI.resizeToContent(Math.ceil(height));
+        });
     });
 }
 

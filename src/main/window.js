@@ -15,7 +15,9 @@ function createMainWindow() {
     hasShadow: false,
     alwaysOnTop: true,
     resizable: false,
-    skipTaskbar: false,
+    minHeight: 20,
+    minimizable: true,
+    skipTaskbar: true,
     icon: path.join(__dirname, '../../assets/icon.ico'),
     webPreferences: {
       nodeIntegration: false,

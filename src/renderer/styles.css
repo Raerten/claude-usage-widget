@@ -307,7 +307,8 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 4px 18px 6px;
+    padding: 0 14px;
+    height: 39px;
     cursor: default;
 }
 
