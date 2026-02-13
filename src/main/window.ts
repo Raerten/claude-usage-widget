@@ -18,7 +18,7 @@ export function createMainWindow(): void {
     minHeight: 20,
     minimizable: true,
     skipTaskbar: true,
-    icon: join(app.getAppPath(), 'assets', 'icon.ico'),
+    icon: join(app.getAppPath(), 'assets', 'tray-icon.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

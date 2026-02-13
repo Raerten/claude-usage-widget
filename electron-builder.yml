@@ -13,9 +13,10 @@ files:
 win:
   target:
     - nsis
-  icon: assets/icon.ico
+  icon: assets/logo.png
 nsis:
   oneClick: false
+  perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true

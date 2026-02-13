@@ -24,7 +24,7 @@ export function createLogWindow(): void {
     alwaysOnTop: true,
     resizable: true,
     skipTaskbar: false,
-    icon: join(app.getAppPath(), 'assets', 'icon.ico'),
+    icon: join(app.getAppPath(), 'assets', 'tray-icon.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
