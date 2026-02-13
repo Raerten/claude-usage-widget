@@ -23,7 +23,7 @@ A standalone Windows desktop widget that displays your Claude.ai usage statistic
 
 ### Download Pre-built Release
 
-1. Download `Claude-Usage-Widget-Setup.exe` from [Releases](https://github.com/raerten/claude-usage-widget/releases)
+1. Download `Claude-Usage-Widget-Setup.exe` from [Releases](https://github.com/Raerten/claude-usage-widget/releases)
 2. Run the installer
 3. Launch "Claude Usage Widget" from Start Menu
 
@@ -32,7 +32,7 @@ A standalone Windows desktop widget that displays your Claude.ai usage statistic
 **Prerequisites:** Node.js 18+, Yarn 4
 
 ```bash
-git clone https://github.com/raerten/claude-usage-widget.git
+git clone https://github.com/Raerten/claude-usage-widget.git
 cd claude-usage-widget
 yarn install
 yarn dev
@@ -43,7 +43,7 @@ Build Windows installer:
 yarn build:win
 ```
 
-Output: `dist/Claude-Usage-Widget-Setup.exe`
+Output: `dist/`
 
 > **Dev tip:** Press **F12** in dev mode to toggle DevTools on any widget window.
 
