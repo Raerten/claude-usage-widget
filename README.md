@@ -73,7 +73,7 @@ Left-click toggles widget visibility.
 
 ## Privacy
 
-- Credentials stored locally only (no encryption currently)
+- Credentials stored locally with per-install encryption key
 - No telemetry - communicates only with claude.ai
 - Open source - code available for review
 

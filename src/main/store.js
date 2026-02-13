@@ -1,7 +1,23 @@
 const Store = require('electron-store');
+const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
+const { app } = require('electron');
+
+function getEncryptionKey() {
+  const keyPath = path.join(app.getPath('userData'), '.encryption-key');
+  try {
+    return fs.readFileSync(keyPath, 'utf8');
+  } catch {
+    const key = crypto.randomBytes(32).toString('hex');
+    fs.mkdirSync(path.dirname(keyPath), { recursive: true });
+    fs.writeFileSync(keyPath, key, { mode: 0o600 });
+    return key;
+  }
+}
 
 const store = new Store({
-  // encryptionKey: 'claude-widget-secure-key-2024'
+  encryptionKey: getEncryptionKey()
 });
 
 module.exports = {

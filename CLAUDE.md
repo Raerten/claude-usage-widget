@@ -9,7 +9,7 @@ Desktop widget (Electron) that displays Claude.ai usage statistics. Uses session
 - **Electron 41** (beta) - Desktop framework
 - **Vanilla JS** - No frontend frameworks
 - **axios** - HTTP client for API calls
-- **electron-store** - Local credential/config storage (encryption key commented out)
+- **electron-store** - Local credential/config storage (encrypted with per-install random key)
 - **electron-builder** - Packaging (Windows NSIS installer)
 - **yarn 4.12.0** - Package manager
 
