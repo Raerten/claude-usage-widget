@@ -420,30 +420,22 @@ body {
     height: 100%;
     border-radius: 3px;
     transition: width 0.5s ease;
+    background-size: var(--gradient-size, 100%) 100%;
 }
 
-/* Session (blue) */
+/* Session (blue → orange → red) */
 .progress-fill.session {
-    background: #569cd6;
+    background-image: linear-gradient(to right, #569cd6, #ce9178, #f14c4c);
 }
 
-/* Weekly (muted orange) */
+/* Weekly (muted orange → yellow → red) */
 .progress-fill.weekly {
-    background: #ce9178;
+    background-image: linear-gradient(to right, #ce9178, #cca700, #f14c4c);
 }
 
-/* Sonnet (blue) */
+/* Sonnet (blue → orange → red) */
 .progress-fill.sonnet {
-    background: #569cd6;
-}
-
-/* Warning / danger overrides */
-.progress-fill.warning {
-    background: #cca700;
-}
-
-.progress-fill.danger {
-    background: #f14c4c;
+    background-image: linear-gradient(to right, #569cd6, #ce9178, #f14c4c);
 }
 
 /* ── Reset meta text ── */

@@ -311,9 +311,9 @@ function updateCollapsedBar() {
     const pct = Math.min(Math.max(sessionUtil, 0), 100);
 
     elements.collapsedProgress.style.width = `${pct}%`;
-    elements.collapsedProgress.classList.remove('warning', 'danger');
-    if (pct >= 90) elements.collapsedProgress.classList.add('danger');
-    else if (pct >= 75) elements.collapsedProgress.classList.add('warning');
+    if (pct > 0) {
+        elements.collapsedProgress.style.setProperty('--gradient-size', `${(100 / pct) * 100}%`);
+    }
 
     elements.collapsedPercent.textContent = `${Math.round(pct)}%`;
 
@@ -554,12 +554,9 @@ function updateProgressBar(progressElement, percentageElement, value) {
     progressElement.style.width = `${percentage}%`;
     percentageElement.textContent = `${Math.round(percentage)}% used`;
 
-    // Color coding based on level
-    progressElement.classList.remove('warning', 'danger');
-    if (percentage >= 90) {
-        progressElement.classList.add('danger');
-    } else if (percentage >= 75) {
-        progressElement.classList.add('warning');
+    // Scale gradient so it spans the full track width
+    if (percentage > 0) {
+        progressElement.style.setProperty('--gradient-size', `${(100 / percentage) * 100}%`);
     }
 }
 
