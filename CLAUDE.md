@@ -21,14 +21,14 @@ preload.js               # IPC bridge (contextBridge), exposes electronAPI to re
 preload-logs.js          # IPC bridge for log window, exposes logsAPI
 src/main/
   constants.js           # URLs, dimensions, polling intervals
-  store.js               # electron-store wrapper (credentials, orgs, window pos, opacity, collapsed state, API cookies)
+  store.js               # electron-store wrapper (credentials, orgs, window pos, opacity, collapsed state, autostart, API cookies)
   window.js              # Main BrowserWindow creation, position persistence, opacity
   logManager.js          # Console interceptor, circular buffer (1000), broadcasts to log window
   logWindow.js           # Log window factory (singleton, 700x500, frameless, resizable, always-on-top)
   auth.js                # Login (visible + silent), cookie polling, org fetching
   api.js                 # Usage API call with session cookie auth
   ipc.js                 # All ipcMain handlers (credentials, window, orgs, usage, opacity)
-  tray.js                # System tray icon, context menu with org radio buttons
+  tray.js                # System tray icon, context menu with org radio buttons + autostart checkbox
 src/renderer/
   index.html             # Widget HTML (states: loading, login, no-usage, auto-login, main, collapsed)
   app.js                 # Frontend logic: UI state machine, countdown timers, manual drag, org switcher
@@ -93,6 +93,11 @@ Six mutually exclusive states managed by show* functions:
 - Access: widget top-bar log button + tray "Show Logs" menu item
 - In-memory only; cleared on app restart
 
+### Autostart (main.js + tray.js)
+- Tray checkbox "Launch on Startup" toggles `app.setLoginItemSettings({ openAtLogin })` (Windows Registry)
+- Stored as `autostart` (boolean, default false) via electron-store
+- Applied on app ready; toggled via tray menu `onToggleAutostart` handler
+
 ### Collapsed Mode
 - Click drag handle or collapsed bar to toggle (ignores interactive elements)
 - Shows session (five_hour) percentage only, with compact reset countdown
@@ -118,6 +123,7 @@ yarn build:win           # Build Windows installer to dist/
 - `get-window-position`, `set-window-position`
 - `get-opacity`, `save-opacity`
 - `get-collapsed`, `save-collapsed`
+- `get-autostart`, `save-autostart`
 - `get-organizations`, `set-selected-org`
 - `fetch-usage-data`
 - `get-buffered-logs`, `clear-logs`
@@ -138,7 +144,7 @@ yarn build:win           # Build Windows installer to dist/
 - When expired: shows "Resetting..." and auto-fetches after 3s delay
 
 ### Tray Menu
-- Show Widget / Refresh / Show Logs / [Org radio list if >1] / Re-login / Log Out / Exit
+- Show Widget / Refresh / Show Logs / Launch on Startup (checkbox) / [Org radio list if >1] / Re-login / Log Out / Exit
 - Left-click tray icon toggles window visibility
 
 ## Development Notes

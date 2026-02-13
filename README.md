@@ -15,6 +15,7 @@ A standalone Windows desktop widget that displays your Claude.ai usage statistic
 - **Log Monitor** - Built-in real-time log viewer for debugging
 - **Auto-refresh** - Updates every 5 minutes; re-fetches automatically after reset
 - **Always on Top** - Frameless, draggable, stays visible on all workspaces
+- **Launch on Startup** - Optional Windows autostart via system tray toggle
 - **System Tray** - Minimizes to tray with full context menu
 
 ## Installation
@@ -63,7 +64,7 @@ Output: `dist/Claude-Usage-Widget-Setup.exe`
 
 ### System Tray
 
-Right-click the tray icon: Show Widget, Refresh, Show Logs, switch Org, Re-login, Log Out, Exit.
+Right-click the tray icon: Show Widget, Refresh, Show Logs, Launch on Startup, switch Org, Re-login, Log Out, Exit.
 Left-click toggles widget visibility.
 
 ## System Requirements

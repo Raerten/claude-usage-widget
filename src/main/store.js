@@ -68,4 +68,7 @@ module.exports = {
 
   getCollapsed: () => store.get('widgetCollapsed', false),
   saveCollapsed: (value) => store.set('widgetCollapsed', !!value),
+
+  getAutostart: () => store.get('autostart', false),
+  saveAutostart: (value) => store.set('autostart', !!value),
 };

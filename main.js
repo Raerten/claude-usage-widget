@@ -38,6 +38,8 @@ function handleOrgSwitch(orgId) {
 }
 
 app.whenReady().then(() => {
+  app.setLoginItemSettings({ openAtLogin: store.getAutostart() });
+
   createMainWindow();
 
   createTray({
@@ -71,6 +73,10 @@ app.whenReady().then(() => {
       }
     },
     onSwitchOrg: (orgId) => handleOrgSwitch(orgId),
+    onToggleAutostart: (enabled) => {
+      store.saveAutostart(enabled);
+      app.setLoginItemSettings({ openAtLogin: enabled });
+    },
   });
 
 });

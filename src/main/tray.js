@@ -26,6 +26,7 @@ function buildContextMenu() {
     { label: 'Show Widget', click: handlers.onShow },
     { label: 'Refresh', click: handlers.onRefresh },
     { label: 'Show Logs', click: handlers.onShowLogs },
+    { label: 'Launch on Startup', type: 'checkbox', checked: store.getAutostart(), click: (menuItem) => handlers.onToggleAutostart(menuItem.checked) },
     ...orgMenuItems,
     { type: 'separator' },
     { label: 'Re-login', click: handlers.onReLogin },

@@ -79,6 +79,14 @@ function registerIpcHandlers() {
     return true;
   });
 
+  // Autostart
+  ipcMain.handle('get-autostart', () => store.getAutostart());
+  ipcMain.handle('save-autostart', (event, value) => {
+    store.saveAutostart(value);
+    app.setLoginItemSettings({ openAtLogin: !!value });
+    return true;
+  });
+
   // Organizations
   ipcMain.handle('get-organizations', () => store.getOrganizations());
   ipcMain.handle('set-selected-org', (event, orgId) => {
