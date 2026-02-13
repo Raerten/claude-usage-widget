@@ -147,6 +147,6 @@ yarn build:win           # Build Windows installer to dist/
 
 ## Build Output
 
-- App ID: `dev.raerten.claude-usage-widget`
+- App ID: `dev.raerten.app.claude-usage-widget`
 - Product: `Claude Usage Widget`
 - Installer: `dist/Claude-Usage-Widget-Setup.exe` (NSIS, allows custom install dir)

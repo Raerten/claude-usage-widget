@@ -1,188 +1,91 @@
 # Claude Usage Widget
 
-A beautiful, standalone Windows desktop widget that displays your Claude.ai usage statistics in real-time.
+A standalone Windows desktop widget that displays your Claude.ai usage statistics in real-time.
 
 ![Claude Usage Widget](assets/claude-usage-screenshot.jpg)
 
 ## Features
 
-- 🎯 **Real-time Usage Tracking** - Monitor both session and weekly usage limits
-- 📊 **Visual Progress Bars** - Clean, gradient progress indicators
-- ⏱️ **Countdown Timers** - Circular timers showing time until reset
-- 🔄 **Auto-refresh** - Updates every 5 minutes automatically
-- 🎨 **Modern UI** - Sleek, draggable widget with dark theme
-- 🔒 **Secure** - Encrypted credential storage
-- 📍 **Always on Top** - Stays visible across all workspaces
-- 💾 **System Tray** - Minimizes to tray for easy access
+- **Real-time Usage Tracking** - Session (5-hour), weekly (all models), and weekly Sonnet-only limits
+- **Visual Progress Bars** - Color-coded: blue/orange default, yellow at 75%+, red at 90%+
+- **Countdown Timers** - Time until each limit resets
+- **Multi-Organization** - Switch between orgs via dropdown or tray menu
+- **Collapsed Mode** - Single-line compact view showing session % only
+- **Window Opacity** - Adjustable transparency (30-100%)
+- **Log Monitor** - Built-in real-time log viewer for debugging
+- **Auto-refresh** - Updates every 5 minutes; re-fetches automatically after reset
+- **Always on Top** - Frameless, draggable, stays visible on all workspaces
+- **System Tray** - Minimizes to tray with full context menu
 
 ## Installation
 
 ### Download Pre-built Release
-1. Download the latest `Claude-Usage-Widget-Setup.exe` from [Releases](https://github.com/SlavomirDurej/claude-usage-widget/releases)
+
+1. Download `Claude-Usage-Widget-Setup.exe` from [Releases](https://github.com/raerten/claude-usage-widget/releases)
 2. Run the installer
 3. Launch "Claude Usage Widget" from Start Menu
 
 ### Build from Source
 
-**Prerequisites:**
-- Node.js 18+ ([Download](https://nodejs.org))
-- npm (comes with Node.js)
-
-**Steps:**
+**Prerequisites:** Node.js 18+, Yarn 4
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/claude-usage-widget.git
+git clone https://github.com/raerten/claude-usage-widget.git
 cd claude-usage-widget
-
-# Install dependencies
-npm install
-
-# Run in development mode
-npm start
-
-# Build installer for Windows
-npm run build:win
+yarn install
+yarn start
 ```
 
-The installer will be created in the `dist/` folder.
+Build Windows installer:
+```bash
+yarn build:win
+```
+
+Output: `dist/Claude-Usage-Widget-Setup.exe`
 
 ## Usage
 
-### First Launch
-
 1. Launch the widget
-2. Click "Login to Claude" when prompted
-3. A browser window will open - login to your Claude.ai account
-4. The widget will automatically capture your session
-5. Usage data will start displaying immediately
+2. Click "Login to Claude" - a browser window opens to claude.ai
+3. Log in with your credentials - the widget captures the session automatically
+4. Usage data appears immediately
 
-### Widget Controls
+### Controls
 
-- **Drag** - Click and drag the title bar to move the widget
-- **Refresh** - Click the refresh icon to update data immediately
-- **Minimize** - Click the minus icon to hide to system tray
-- **Close** - Click the X to minimize to tray (doesn't exit)
+- **Drag** anywhere on the title bar to move
+- **Refresh** button to update data now
+- **Collapse/Expand** click the drag handle or collapsed bar
+- **Opacity slider** in the top bar (30-100%)
+- **Org switcher** dropdown when multiple organizations exist
+- **Log button** opens the log monitoring window
+- **Minimize** to system tray (minus icon)
+- **Close** to system tray (X icon)
 
-### System Tray Menu
+### System Tray
 
-Right-click the tray icon for:
-- Show/Hide widget
-- Refresh usage data
-- Re-login (if session expires)
-- Settings (coming soon)
-- Exit application
+Right-click the tray icon: Show Widget, Refresh, Show Logs, switch Org, Re-login, Log Out, Exit.
+Left-click toggles widget visibility.
 
-## Understanding the Display
+## System Requirements
 
-### Current Session
-- **Progress Bar** - Shows usage from 0-100%
-- **Timer** - Time remaining until 5-hour session resets
-- **Color Coding**:
-  - Purple: Normal usage (0-74%)
-  - Orange: High usage (75-89%)
-  - Red: Critical usage (90-100%)
+- Windows 10+ (64-bit)
+- Internet connection (for Claude.ai API)
 
-### Weekly Limit
-- **Progress Bar** - Shows weekly usage from 0-100%
-- **Timer** - Time remaining until weekly reset (Wednesdays 7:00 AM)
-- **Same color coding** as session usage
+## Privacy
 
-## Configuration
+- Credentials stored locally only (no encryption currently)
+- No telemetry - communicates only with claude.ai
+- Open source - code available for review
 
-### Auto-start on Windows Boot
+## Tech Stack
 
-1. Press `Win + R`
-2. Type `shell:startup` and press Enter
-3. Create a shortcut to the widget executable in this folder
-
-### Custom Refresh Interval
-
-Edit `src/renderer/app.js`:
-```javascript
-const UPDATE_INTERVAL = 5 * 60 * 1000; // Change to your preference (in milliseconds)
-```
-
-## Troubleshooting
-
-### "Login Required" keeps appearing
-- Your Claude.ai session may have expired
-- Click "Login to Claude" to re-authenticate
-- Check that you're logging into the correct account
-
-### Widget not updating
-- Check your internet connection
-- Click the refresh button manually
-- Ensure Claude.ai is accessible in your region
-- Try re-logging in from the system tray menu
-
-### Widget position not saving
-- Window position is now saved automatically when you drag it
-- Position will be restored when you restart the app
-
-### Build errors
-```bash
-# Clear cache and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-## Privacy & Security
-
-- Your session credentials are stored **locally only** using encrypted storage
-- No data is sent to any third-party servers
-- The widget only communicates with Claude.ai official API
-- Session cookies are stored using Electron's secure storage
-
-## Technical Details
-
-**Built with:**
-- Electron 28.0.0
-- Pure JavaScript (no framework overhead)
-- Native Node.js APIs
-- electron-store for secure storage
-
-**API Endpoint:**
-```
-https://claude.ai/api/organizations/{org_id}/usage
-```
-
-**Storage Location:**
-```
-%APPDATA%/claude-usage-widget/config.json (encrypted)
-```
-
-## Roadmap
-
-- [ ] macOS support
-- [ ] Linux support
-- [ ] Custom themes
-- [ ] Notification alerts at usage thresholds
-- [x] Remember window position
-- [ ] Settings panel
-- [ ] Usage history graphs
-- [ ] Multiple account support
-- [ ] Keyboard shortcuts
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- Electron 41 (beta), Vanilla JS, axios, electron-store, electron-builder
+- Package manager: Yarn 4.12.0
 
 ## License
 
-MIT License - feel free to use and modify as needed.
+MIT
 
 ## Disclaimer
 
-This is an unofficial tool and is not affiliated with or endorsed by Anthropic. Use at your own discretion.
-
-## Support
-
-If you encounter issues:
-1. Check the [Issues](issues) page
-2. Create a new issue with details about your problem
-3. Include your OS version and any error messages
-
----
-
-Made with ❤️ for the Claude.ai community
+Unofficial tool, not affiliated with or endorsed by Anthropic. Use at your own discretion.
