@@ -2,76 +2,125 @@
 
 ## Project Overview
 
-Desktop widget (Electron) that displays Claude Code usage statistics. Uses session-based auth via claude.ai and the web API to fetch real-time usage data.
+Desktop widget (Electron) that displays Claude.ai usage statistics. Uses session-based auth via claude.ai cookies and the web API to fetch real-time usage data. Shows session (5-hour), weekly (7-day all models), and weekly Sonnet-only utilization with countdown timers.
 
 ## Tech Stack
 
-- **Electron 28** - Desktop framework
+- **Electron 41** (beta) - Desktop framework
 - **Vanilla JS** - No frontend frameworks
 - **axios** - HTTP client for API calls
-- **electron-store** - Local credential/config storage
+- **electron-store** - Local credential/config storage (encryption key commented out)
 - **electron-builder** - Packaging (Windows NSIS installer)
+- **yarn 4.12.0** - Package manager
 
 ## Project Structure
 
 ```
-main.js              # Electron main process: window management, auth, API calls, tray
-preload.js           # IPC bridge (contextBridge), context isolation
+main.js                  # App entry: single-instance lock, app lifecycle, tray handler wiring
+preload.js               # IPC bridge (contextBridge), exposes electronAPI to renderer
+src/main/
+  constants.js           # URLs, dimensions, polling intervals
+  store.js               # electron-store wrapper (credentials, orgs, window pos, opacity)
+  window.js              # Main BrowserWindow creation, position persistence, opacity
+  auth.js                # Login (visible + silent), cookie polling, org fetching
+  api.js                 # Usage API call with session cookie auth
+  ipc.js                 # All ipcMain handlers (credentials, window, orgs, usage, opacity)
+  tray.js                # System tray icon, context menu with org radio buttons
 src/renderer/
-  index.html         # Widget HTML
-  app.js             # Frontend logic, UI updates, countdown timers
-  styles.css         # All styling (dark theme, progress bars, animations)
-assets/              # Icons, logos, screenshots
+  index.html             # Widget HTML (states: loading, login, no-usage, auto-login, main, collapsed)
+  app.js                 # Frontend logic: UI state machine, countdown timers, manual drag, org switcher
+  styles.css             # Dark theme (VS Code-inspired), progress bars, animations
+assets/                  # icon.ico, tray-icon.png
 ```
 
 ## How It Works
 
-### Authentication
-1. Opens BrowserWindow to `https://claude.ai` for user login
-2. Monitors cookies for `sessionKey`
-3. Fetches all orgs from `/api/organizations`, stores full list as `{id, name}` array
-4. Stores `sessionKey` + `organizations[]` + `selectedOrganizationId` via electron-store
-5. On re-login, preserves existing org selection if still valid
-6. Silent re-login (hidden window) on 401/403 errors using existing browser cookies
+### Authentication (src/main/auth.js)
+1. Opens BrowserWindow to `https://claude.ai` for user login (800x700)
+2. Polls cookies every 2s (visible) or 1s (silent) for `sessionKey`
+3. On cookie found, fetches orgs from `/api/organizations` with sessionKey header
+4. Maps orgs to `{id: uuid, name}` array, stores via electron-store
+5. Preserves existing org selection if still valid on re-login
+6. On 401/403: attempts silent re-login (hidden window, 15s timeout), falls back to visible login
 
 ### Multi-Organization Support
-- All orgs are stored on login; user can switch between them
-- Org switcher dropdown in top bar (hidden if only 1 org)
-- Tray menu shows radio-button org list when multiple orgs exist
-- Switching orgs updates `selectedOrganizationId` in store, re-fetches usage data
-- Background sync (5min auto-refresh) only runs for the selected org
+- All orgs stored on login; user can switch via dropdown (top bar) or tray radio buttons
+- Org dropdown hidden when only 1 org; chevron hidden, cursor set to default
+- Switching orgs: updates store, refreshes tray menu, sends `org-switched` IPC to renderer
+- Renderer stops auto-update, clears cached data, re-fetches for new org, restarts timer
 
-### Usage Data
+### Usage Data (src/main/api.js)
 - Endpoint: `https://claude.ai/api/organizations/{orgId}/usage`
-- Auth: `Cookie: sessionKey={key}` header
-- Returns `five_hour` and `seven_day` utilization percentages + reset timestamps
-- Auto-refreshes every 5 minutes
+- Auth: `Cookie: sessionKey={key}` header + custom User-Agent
+- Response fields used: `five_hour`, `seven_day`, `seven_day_sonnet` (each has `utilization` + `resets_at`)
+- `seven_day_sonnet` row shown only when data exists (utilization > 0 or resets_at present)
+- Auto-refreshes every 5 minutes; auto re-fetches 3s after a reset timer expires
 
-### Window
-- 480x140px frameless, transparent, always-on-top widget
-- Draggable with position persistence
-- System tray integration (show/hide, refresh, re-login, exit)
+### Window (src/main/window.js)
+- 340px wide, frameless, no shadow, always-on-top ("floating" level), visible on all workspaces
+- **Not transparent** (`transparent: false`); background is `#252526`
+- Skips taskbar (`skipTaskbar: true`)
+- Height auto-adjusts to content via `resize-to-content` IPC (double-rAF for accurate measurement)
+- Manual drag implementation (replaces `-webkit-app-region: drag` so clicks work); 4px drag threshold
+- Position persisted to electron-store on every `move` event
+- Window opacity controlled via slider (30-100%), saved to store, applied via `setOpacity()`
+- Single instance enforced via `requestSingleInstanceLock()`
+
+### UI States (src/renderer/app.js)
+Six mutually exclusive states managed by show* functions:
+1. **Loading** - spinner on initial load
+2. **Login Required** - login icon + button
+3. **No Usage** - "Start chatting with Claude" message (when all utilizations are 0 with no reset times)
+4. **Auto Login** - spinner + "Trying to auto-login..." during silent re-login
+5. **Main Content** - session/weekly/sonnet progress bars with reset countdowns
+6. **Collapsed** - single-line bar showing session % + reset time (click header/bar to toggle)
+
+### Collapsed Mode
+- Click drag handle or collapsed bar to toggle (ignores interactive elements)
+- Shows session (five_hour) percentage only, with compact reset countdown
+- Window resized to 39px height; border removed
+- Has its own refresh button
 
 ## Commands
 
 ```bash
-npm install          # Install dependencies
-npm start            # Run app (dev mode with DevTools)
-npm run dev          # Run with NODE_ENV=development
-npm run build:win    # Build Windows installer to dist/
+yarn install             # Install dependencies
+yarn start               # Run app (opens DevTools in dev mode)
+yarn dev                 # Run with NODE_ENV=development (cross-env)
+yarn build:win           # Build Windows installer to dist/
 ```
 
 ## Key Implementation Details
 
-- All orgs stored as `organizations[]` array; selected org tracked via `selectedOrganizationId`
-- electron-store encryption key is currently commented out in main.js
-- Color coding: purple (0-74%), orange (75-89%), red (90-100%)
-- IPC channels: `fetch-usage-data`, `login-success`, `open-login`, `get-organizations`, `set-selected-org`, `org-switched`
-- Login window is 800x700, loads claude.ai directly
-- Silent login has 15-second timeout before falling back to visible login
+### IPC Channels
+**invoke (request/response):**
+- `get-credentials`, `save-credentials`, `delete-credentials`
+- `get-window-position`, `set-window-position`
+- `get-opacity`, `save-opacity`
+- `get-organizations`, `set-selected-org`
+- `fetch-usage-data`
+
+**send (one-way to main):**
+- `open-login`, `minimize-window`, `close-window`, `resize-to-content`, `open-external`
+
+**send (one-way to renderer):**
+- `login-success`, `refresh-usage`, `session-expired`, `silent-login-started`, `silent-login-failed`, `logout`, `org-switched`
+
+### Progress Bar Colors
+- Default: blue `#569cd6` (session/sonnet), muted orange `#ce9178` (weekly)
+- Warning (75-89%): yellow `#cca700`
+- Danger (90-100%): red `#f14c4c`
+
+### Reset Timer Format
+- `Resets {time} · {date} ({timezone})` where time = `Xd Xh` / `Xh Xm` / `Xm`
+- When expired: shows "Resetting..." and auto-fetches after 3s delay
+
+### Tray Menu
+- Show Widget / Refresh / [Org radio list if >1] / Re-login / Log Out / Exit
+- Left-click tray icon toggles window visibility
 
 ## Build Output
 
-- App ID: `com.claudeusage.widget`
+- App ID: `dev.raerten.claude-usage-widget`
 - Product: `Claude Usage Widget`
-- Installer: `dist/Claude-Usage-Widget-Setup.exe`
+- Installer: `dist/Claude-Usage-Widget-Setup.exe` (NSIS, allows custom install dir)
