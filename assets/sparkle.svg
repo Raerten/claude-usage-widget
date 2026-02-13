@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Usage gauge icon for Claude Usage Widget -->
+  <!-- Outer arc (track) - 270 degree arc from 135° to 45° -->
+  <path d="M44 184 A92 92 0 1 1 212 184" fill="none" stroke="#4e4e5e" stroke-width="30" stroke-linecap="round"/>
+  <!-- Filled usage arc (~65% filled) -->
+  <path d="M44 184 A92 92 0 1 1 196 112" fill="none" stroke="#d97757" stroke-width="30" stroke-linecap="round"/>
+  <!-- Needle pointing to ~65% -->
+  <line x1="128" y1="168" x2="182" y2="100" stroke="#e0e0e8" stroke-width="9" stroke-linecap="round"/>
+  <!-- Center pivot -->
+  <circle cx="128" cy="168" r="12" fill="#e0e0e8"/>
+</svg>
