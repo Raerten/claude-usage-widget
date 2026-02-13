@@ -13,12 +13,16 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 25
+
+      - name: Install Corepack
+        run: npm install -g --force corepack
 
       - name: Enable Corepack
         run: corepack enable
@@ -31,16 +35,5 @@ jobs:
 
       - name: Build & Package
         run: yarn build:win
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-installer
-          path: dist/*.exe
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          generate_release_notes: true
-          files: dist/*.exe
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
