@@ -55,5 +55,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // API
   fetchUsageData: () => ipcRenderer.invoke('fetch-usage-data'),
   attemptSilentLogin: () => ipcRenderer.send('attempt-silent-login'),
-  openExternal: (url) => ipcRenderer.send('open-external', url)
+  openExternal: (url) => ipcRenderer.send('open-external', url),
+
+  // Log window
+  openLogWindow: () => ipcRenderer.send('open-log-window'),
 });

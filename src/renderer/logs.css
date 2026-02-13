@@ -1,0 +1,255 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  background: #1e1e1e;
+  color: #cccccc;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+#logWindow {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Titlebar */
+.log-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3c3c3c;
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.titlebar-icon {
+  color: #569cd6;
+  flex-shrink: 0;
+}
+
+.titlebar-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cccccc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.titlebar-count {
+  font-size: 10px;
+  color: #858585;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.titlebar-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #858585;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-close:hover {
+  background: #f14c4c;
+  color: #ffffff;
+}
+
+/* Controls */
+.log-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #252526;
+  border-bottom: 1px solid #3c3c3c;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.controls-left,
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: transparent;
+  border: 1px solid #3c3c3c;
+  color: #858585;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-btn:hover {
+  background: #2d2d2d;
+  color: #cccccc;
+}
+
+.filter-btn.active {
+  background: #0e639c;
+  border-color: #0e639c;
+  color: #ffffff;
+}
+
+.search-input {
+  padding: 3px 8px;
+  font-size: 11px;
+  background: #3c3c3c;
+  border: 1px solid #3c3c3c;
+  color: #cccccc;
+  border-radius: 3px;
+  width: 160px;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: #6a6a6a;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0e639c;
+}
+
+.control-icon-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #3c3c3c;
+  color: #858585;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.control-icon-btn:hover {
+  background: #2d2d2d;
+  color: #cccccc;
+}
+
+.control-icon-btn.active {
+  background: #0e639c;
+  border-color: #0e639c;
+  color: #ffffff;
+}
+
+/* Log list */
+.log-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0;
+  background: #1e1e1e;
+}
+
+.log-entry {
+  display: flex;
+  gap: 8px;
+  padding: 2px 12px 2px 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  border-left: 2px solid transparent;
+}
+
+.log-entry:hover {
+  background: #2a2a2a;
+}
+
+.log-entry.info {
+  border-left-color: #569cd6;
+}
+
+.log-entry.warn {
+  border-left-color: #cca700;
+  background: rgba(204, 167, 0, 0.04);
+}
+
+.log-entry.error {
+  border-left-color: #f14c4c;
+  background: rgba(241, 76, 76, 0.06);
+}
+
+.log-timestamp {
+  color: #6a6a6a;
+  flex-shrink: 0;
+  font-size: 10px;
+  min-width: 65px;
+  line-height: 1.7;
+}
+
+.log-level {
+  flex-shrink: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  min-width: 36px;
+  line-height: 1.7;
+}
+
+.log-level.info { color: #569cd6; }
+.log-level.warn { color: #cca700; }
+.log-level.error { color: #f14c4c; }
+
+.log-message {
+  flex: 1;
+  word-break: break-word;
+  color: #cccccc;
+  white-space: pre-wrap;
+}
+
+/* Scrollbar */
+.log-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.log-list::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.log-list::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 5px;
+}
+
+.log-list::-webkit-scrollbar-thumb:hover {
+  background: #4e4e4e;
+}
+
+/* Empty state */
+.log-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #858585;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}

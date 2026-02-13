@@ -158,6 +158,28 @@ body {
     color: #569cd6;
 }
 
+/* ── Log button ── */
+.log-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #6a6a6a;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.log-btn:hover {
+    color: #cccccc;
+    background: #2d2d2d;
+}
+
 /* ── Opacity slider ── */
 .opacity-control {
     display: flex;

@@ -5,6 +5,8 @@ const { fetchUsageData } = require('./api');
 const { getMainWindow } = require('./window');
 const { createLoginWindow, attemptSilentLogin } = require('./auth');
 const { refreshTrayMenu } = require('./tray');
+const { getBufferedLogs, clearLogs } = require('./logManager');
+const { createLogWindow, getLogWindow } = require('./logWindow');
 
 function registerIpcHandlers() {
   ipcMain.handle('get-credentials', () => store.getCredentials());
@@ -87,6 +89,25 @@ function registerIpcHandlers() {
   ipcMain.on('attempt-silent-login', () => {
     console.log('[Main] Renderer requested silent re-login');
     attemptSilentLogin();
+  });
+
+  // Log window
+  ipcMain.on('open-log-window', () => {
+    createLogWindow();
+  });
+
+  ipcMain.on('close-log-window', () => {
+    const logWin = getLogWindow();
+    if (logWin && !logWin.isDestroyed()) logWin.close();
+  });
+
+  ipcMain.handle('get-buffered-logs', () => {
+    return getBufferedLogs();
+  });
+
+  ipcMain.handle('clear-logs', () => {
+    clearLogs();
+    return true;
   });
 }
 

@@ -1,9 +1,13 @@
 const { app } = require('electron');
+const { initLogManager } = require('./src/main/logManager');
 const { createMainWindow, getMainWindow } = require('./src/main/window');
 const { createTray, refreshTrayMenu } = require('./src/main/tray');
 const { createLoginWindow } = require('./src/main/auth');
+const { createLogWindow } = require('./src/main/logWindow');
 const { registerIpcHandlers } = require('./src/main/ipc');
 const store = require('./src/main/store');
+
+initLogManager();
 
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -47,6 +51,7 @@ app.whenReady().then(() => {
       const mainWindow = getMainWindow();
       if (mainWindow) mainWindow.webContents.send('refresh-usage');
     },
+    onShowLogs: () => createLogWindow(),
     onReLogin: () => {
       store.deleteCredentials();
       createLoginWindow();

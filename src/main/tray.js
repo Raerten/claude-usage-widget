@@ -25,6 +25,7 @@ function buildContextMenu() {
   return Menu.buildFromTemplate([
     { label: 'Show Widget', click: handlers.onShow },
     { label: 'Refresh', click: handlers.onRefresh },
+    { label: 'Show Logs', click: handlers.onShowLogs },
     ...orgMenuItems,
     { type: 'separator' },
     { label: 'Re-login', click: handlers.onReLogin },

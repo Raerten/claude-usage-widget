@@ -99,7 +99,10 @@ const elements = {
     collapsedRefreshBtn: document.getElementById('collapsedRefreshBtn'),
 
     // Opacity
-    opacitySlider: document.getElementById('opacitySlider')
+    opacitySlider: document.getElementById('opacitySlider'),
+
+    // Log window
+    logBtn: document.getElementById('logBtn'),
 };
 
 // Initialize
@@ -125,6 +128,11 @@ async function init() {
 function setupEventListeners() {
     elements.loginBtn.addEventListener('click', () => {
         window.electronAPI.openLogin();
+    });
+
+    elements.logBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.electronAPI.openLogWindow();
     });
 
     elements.footerRefreshBtn.addEventListener('click', () => doRefresh());

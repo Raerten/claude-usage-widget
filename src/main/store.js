@@ -46,4 +46,7 @@ module.exports = {
   getApiCookies: () => store.get('apiCookies', {}),
   saveApiCookies: (cookies) => store.set('apiCookies', cookies),
   clearApiCookies: () => store.delete('apiCookies'),
+
+  getLogWindowPosition: () => store.get('logWindowPosition'),
+  saveLogWindowPosition: (x, y) => store.set('logWindowPosition', { x, y }),
 };
